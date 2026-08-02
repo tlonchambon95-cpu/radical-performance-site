@@ -1,0 +1,17 @@
+# Système
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# Éditeurs
+.vscode/
+.idea/
+*.swp
+
+# Netlify (dossier de travail local de la CLI)
+.netlify/
+
+# Sauvegardes et brouillons
+*.bak
+*.tmp
+*~
