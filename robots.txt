@@ -1,0 +1,5 @@
+# Radical Performance — autorise l'indexation complète du site.
+User-agent: *
+Allow: /
+
+Sitemap: https://radicalperformance.netlify.app/sitemap.xml
