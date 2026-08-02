@@ -131,6 +131,11 @@ section{scroll-margin-top:110px}
 }
 .hero .sub{color:var(--muted);font-size:16.5px;max-width:52ch;line-height:1.65}
 .hero .cta{display:flex;gap:12px;margin-top:34px;flex-wrap:wrap}
+.dl-meta{
+  margin-top:14px;font-family:'JetBrains Mono';font-size:11px;letter-spacing:.06em;
+  text-transform:uppercase;color:var(--dim);
+}
+.dl-meta b{color:var(--volt);font-weight:500}
 .hero .strip{
   margin-top:44px;display:flex;gap:10px 22px;flex-wrap:wrap;
   font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--dim);
@@ -410,7 +415,10 @@ footer p{font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.1em;text-
     <a href="#console">La console</a>
   </div>
   <div class="sp"></div>
-  <button class="btn btn-g btn-sm" onclick="document.getElementById('console').scrollIntoView()">Ouvrir la console</button>
+  <a class="btn btn-g btn-sm" id="navDl" href="https://github.com/tlonchambon95-cpu/radical-performance/releases/latest" target="_blank" rel="noopener">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/></svg>
+    Télécharger
+  </a>
 </nav>
 
 <!-- ================= HERO ================= -->
@@ -422,9 +430,17 @@ footer p{font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.1em;text-
     <h1>Chaque <span class="grad-text">milliseconde</span> est une décision.</h1>
     <p class="sub">Radical Performance mesure ton budget de latence du clic au pixel, arme uniquement les réglages qui ont un effet démontré, et génère un script PowerShell transparent — avec son retour arrière. Pas de magie, pas de placebo.</p>
     <div class="cta">
-      <button class="btn btn-g" onclick="document.getElementById('console').scrollIntoView()">Ouvrir la console</button>
+      <a class="btn btn-g" id="heroDl" href="https://github.com/tlonchambon95-cpu/radical-performance/releases/latest" target="_blank" rel="noopener">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/></svg>
+        Télécharger l'application
+      </a>
+      <button class="btn btn-ghost" onclick="document.getElementById('console').scrollIntoView()">Ouvrir la console</button>
       <button class="btn btn-ghost" onclick="document.getElementById('methode').scrollIntoView()">Voir la méthode</button>
     </div>
+    <!-- Ligne d'informations sous les boutons. Le numero de version est vide au depart et
+         rempli par JavaScript depuis l'API GitHub : si la requete echoue, la ligne reste
+         lisible et correcte, simplement sans le numero. -->
+    <p class="dl-meta"><span id="dlVer" hidden></span>Windows 10 et 11 · 64 bits · Gratuit</p>
     <div class="strip">
       <span>51 réglages vérifiés</span>
       <span>4 verdicts</span>
@@ -562,7 +578,8 @@ footer p{font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.1em;text-
       <h4>Nature de l'outil et responsabilité</h4>
       <p>Radical Performance est un outil pédagogique. Les scripts générés modifient la configuration de Windows (registre, plans d'alimentation, services) et certains réglages, clairement identifiés « Compromis », réduisent des protections de sécurité du système. L'exécution de ces scripts se fait sous la seule responsabilité de l'utilisateur, après lecture et sur une machine dont il assume l'administration. Il est recommandé de tester en environnement contrôlé et de conserver le script de retour arrière. Les valeurs de latence affichées proviennent d'un modèle indicatif et ne constituent ni une mesure ni une garantie de gain.</p>
       <h4>Données personnelles</h4>
-      <p>Ce site ne dépose aucun cookie, n'embarque aucun traceur ni service tiers, et ne collecte aucune donnée. Les polices de caractères sont auto-hébergées : aucune requête n'est émise vers un serveur externe.</p>
+      <p>Ce site ne dépose aucun cookie, n'embarque aucun traceur publicitaire ni outil de mesure d'audience, et ne collecte aucune donnée personnelle. Les polices de caractères sont auto-hébergées : aucune requête n'est émise vers un serveur de polices.</p>
+      <p>Une seule requête est adressée à un service externe : la page interroge l'API publique de GitHub (<span class="ph">api.github.com</span>) pour afficher le numéro de la dernière version de l'application disponible au téléchargement. Cette requête est anonyme et en lecture seule — aucune donnée vous concernant n'est transmise —, mais elle expose nécessairement votre adresse IP à GitHub, comme le ferait n'importe quel lien vers ce site. Elle n'est pas indispensable au fonctionnement de la page : si vous la bloquez, seul le numéro de version disparaît.</p>
       <h4>Propriété intellectuelle</h4>
       <p>« Radical Performance » ainsi que le contenu de ce site sont la propriété de leur éditeur. Call of Duty est une marque d'Activision Publishing, Inc. ; ce site est indépendant et n'est ni affilié ni approuvé par Activision.</p>
     </div>
@@ -1423,6 +1440,42 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') closeL(); })
 </script>
 
 <script>
+/* ---------- Numero de la derniere version publiee ----------
+   Interroge l'API GitHub pour afficher la version reellement disponible au
+   telechargement, plutot qu'un numero ecrit en dur qui deviendrait faux a la
+   premiere mise a jour.
+
+   Degradation volontaire : si l'appel echoue (hors ligne, quota d'API atteint,
+   GitHub indisponible), on n'affiche simplement pas le numero. Les boutons de
+   telechargement, eux, sont de vrais liens ecrits dans le HTML : ils fonctionnent
+   meme sans JavaScript. Le site ne depend jamais de cet appel pour etre utile. */
+(() => {
+  const DEPOT = 'tlonchambon95-cpu/radical-performance';
+  fetch(`https://api.github.com/repos/${DEPOT}/releases/latest`, {
+    headers: { 'Accept': 'application/vnd.github+json' }
+  })
+    .then(r => r.ok ? r.json() : Promise.reject(r.status))
+    .then(d => {
+      const version = (d.tag_name || '').replace(/^v/i, '');
+      if (!version) return;
+
+      const el = document.getElementById('dlVer');
+      if (el) {
+        el.innerHTML = 'Version <b>' + version + '</b> · ';
+        el.hidden = false;
+      }
+
+      // Poids reel de l'archive, tel que publie
+      const zip = (d.assets || []).find(a => /\.zip$/i.test(a.name));
+      if (zip && zip.size) {
+        const mo = Math.round(zip.size / 1048576);
+        const meta = document.querySelector('.dl-meta');
+        if (meta) meta.insertAdjacentText('beforeend', ' · ' + mo + ' Mo');
+      }
+    })
+    .catch(() => { /* silencieux : les liens restent fonctionnels */ });
+})();
+
 /* pause des rendus du hero hors écran */
 (() => {
   window.__heroLive = true;
