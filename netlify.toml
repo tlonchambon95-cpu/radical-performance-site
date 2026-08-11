@@ -9,14 +9,13 @@
 # La CSP est stricte et volontairement compatible avec le site tel qu'il est écrit :
 # - 'unsafe-inline' est nécessaire pour les <style> et <script> inline du fichier unique ;
 # - les polices sont en data: (auto-hébergées, aucune requête vers un serveur de polices) ;
-# - connect-src autorise UNIQUEMENT api.github.com, et rien d'autre : c'est le strict
-#   nécessaire pour afficher le numéro de la dernière version publiée sous le bouton de
-#   téléchargement. Aucune donnée n'est envoyée, la requête est en lecture seule et
-#   anonyme. Toute autre destination reste interdite.
+# - connect-src est limite a 'self' : la page n'emet aucune requete vers un tiers.
+#   Le numero de version est ecrit dans la page a la construction, et le bouton de
+#   telechargement est un simple lien vers GitHub Releases (navigation, pas requete).
 [[headers]]
   for = "/*"
   [headers.values]
-    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self' https://api.github.com; frame-ancestors 'none'; base-uri 'self'; form-action 'none'"
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'none'"
     X-Frame-Options = "DENY"
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"

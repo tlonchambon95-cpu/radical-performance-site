@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
 <meta charset="utf-8">
@@ -7,45 +7,23 @@
 <meta name="description" content="Optimisez votre PC pour le jeu compétitif : Radical Performance mesure votre budget de latence du clic au pixel et génère un script PowerShell transparent et réversible. 51 réglages vérifiés, verdicts honnêtes, zéro placebo. Gratuit, Windows 10 et 11.">
 <meta name="theme-color" content="#060507">
 <link rel="canonical" href="https://radicalperformance.netlify.app/">
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23FF7A68'/%3E%3Cstop offset='1' stop-color='%23BA0A1E'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpolygon points='13,0 64,0 64,51 51,64 0,64 0,13' fill='%230C0A0C'/%3E%3Cg fill='url(%23g)' transform='translate(15.5,17) skewX(-7.4)'%3E%3Cpath d='M0,0 H13.2 L17.1,3.8 V10.1 L13.2,13.9 H0 Z M6,3.5 H11.6 L13.2,5 V8.8 L11.6,10.4 H6 Z' fill-rule='evenodd'/%3E%3Cpath d='M0,12 H6 V28 H0 Z'/%3E%3Cpath d='M8.4,12 H14.1 L21.3,28 H15.3 Z'/%3E%3Cpath d='M25.2,0 H38.4 L42.3,3.8 V11.2 L38.4,15 H31.2 V28 H25.2 Z M31.2,3.5 H36.8 L38.4,5 V9.9 L36.8,11.5 H31.2 Z' fill-rule='evenodd'/%3E%3C/g%3E%3C/svg%3E">
-<!-- Open Graph : aperçu affiché quand le lien est partagé (Discord, X, WhatsApp…). -->
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Radical Performance">
 <meta property="og:title" content="Radical Performance — Optimisation PC gaming et latence esport">
 <meta property="og:description" content="Budget de latence en direct, 51 réglages à verdict, script PowerShell réversible. Gratuit, Windows 10 et 11.">
 <meta property="og:url" content="https://radicalperformance.netlify.app/">
 <meta property="og:locale" content="fr_FR">
-<!-- Pas d'og:image tant qu'aucune illustration n'existe : pointer vers un fichier absent
-     produirait un aperçu cassé, pire que pas d'image du tout. Le jour où une image
-     og.png (1200x630) est ajoutée à la racine, décommenter la ligne ci-dessous et
-     remplacer summary par summary_large_image.
 <meta property="og:image" content="https://radicalperformance.netlify.app/og.png">
--->
 <meta name="twitter:card" content="summary">
-
-<!-- Données structurées : aident Google à comprendre qu'il s'agit d'un logiciel
-     téléchargeable, et non d'un simple article. -->
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "SoftwareApplication",
-  "name": "Radical Performance",
-  "alternateName": "RadicalPerformance",
-  "applicationCategory": "UtilitiesApplication",
-  "applicationSubCategory": "Optimisation système pour le jeu vidéo",
-  "operatingSystem": "Windows 10, Windows 11",
-  "inLanguage": "fr",
-  "url": "https://radicalperformance.netlify.app/",
-  "downloadUrl": "https://github.com/tlonchambon95-cpu/radical-performance-downloads/releases/latest",
-  "softwareHelp": "https://radicalperformance.netlify.app/#methode",
-  "description": "Outil d'optimisation PC pour le jeu compétitif : mesure du budget de latence du clic au pixel, 51 réglages classés par verdict d'efficacité réelle, et génération d'un script PowerShell transparent et réversible.",
-  "offers": {
-    "@type": "Offer",
-    "price": "0",
-    "priceCurrency": "EUR"
-  }
-}
-</script>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="application-name" content="Radical Performance">
+<meta name="apple-mobile-web-app-title" content="Radical Perf">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23FF7A68'/%3E%3Cstop offset='1' stop-color='%23BA0A1E'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpolygon points='13,0 64,0 64,51 51,64 0,64 0,13' fill='%230C0A0C'/%3E%3Cg fill='url(%23g)' transform='translate(15.5,17) skewX(-7.4)'%3E%3Cpath d='M0,0 H13.2 L17.1,3.8 V10.1 L13.2,13.9 H0 Z M6,3.5 H11.6 L13.2,5 V8.8 L11.6,10.4 H6 Z' fill-rule='evenodd'/%3E%3Cpath d='M0,12 H6 V28 H0 Z'/%3E%3Cpath d='M8.4,12 H14.1 L21.3,28 H15.3 Z'/%3E%3Cpath d='M25.2,0 H38.4 L42.3,3.8 V11.2 L38.4,15 H31.2 V28 H25.2 Z M31.2,3.5 H36.8 L38.4,5 V9.9 L36.8,11.5 H31.2 Z' fill-rule='evenodd'/%3E%3C/g%3E%3C/svg%3E">
+<!-- Open Graph — aperçu affiché quand le lien est partagé (Discord, X, WhatsApp…) -->
 <style id="webfonts">
 /* Polices auto-hébergées (fontsource, licence OFL) — zéro requête externe, conforme RGPD */
 @font-face{font-family:'Space Grotesk';font-style:normal;font-weight:500;font-display:swap;src:url(data:font/woff2;base64,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) format('woff2');unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;}
@@ -115,6 +93,7 @@ section{scroll-margin-top:110px}
   transition:transform .2s,box-shadow .25s,background .2s,border-color .2s,color .2s,opacity .2s;
   white-space:nowrap;
 }
+.btn[hidden]{display:none}  /* sinon inline-flex ci-dessus l'emporte sur l'attribut hidden */
 .btn-g{background:var(--grad);color:#FFFFFF;box-shadow:0 8px 32px rgba(255,59,69,.28),inset 0 1px 0 rgba(255,255,255,.35)}
 .btn-g:hover{transform:translateY(-2px);box-shadow:0 14px 44px rgba(255,59,69,.38)}
 .btn-ghost{border:1px solid var(--line);background:rgba(255,255,255,.03);color:var(--muted);backdrop-filter:blur(8px)}
@@ -162,11 +141,6 @@ section{scroll-margin-top:110px}
 }
 .hero .sub{color:var(--muted);font-size:16.5px;max-width:52ch;line-height:1.65}
 .hero .cta{display:flex;gap:12px;margin-top:34px;flex-wrap:wrap}
-.dl-meta{
-  margin-top:14px;font-family:'JetBrains Mono';font-size:11px;letter-spacing:.06em;
-  text-transform:uppercase;color:var(--dim);
-}
-.dl-meta b{color:var(--volt);font-weight:500}
 .hero .strip{
   margin-top:44px;display:flex;gap:10px 22px;flex-wrap:wrap;
   font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--dim);
@@ -365,6 +339,235 @@ section{scroll-margin-top:110px}
 }
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
+/* ---------- MODE DÉMO ---------- */
+.demo-bar{
+  position:fixed;top:0;left:0;height:3px;width:0;z-index:250;
+  background:var(--grad);box-shadow:0 0 14px rgba(255,59,69,.7);
+  opacity:0;transition:width .3s linear,opacity .3s;pointer-events:none;
+}
+.demo-bar.show{opacity:1}
+#btnDemo.on{background:var(--grad);border-color:transparent;color:#FFFFFF}
+/* ---------- TÉLÉCHARGEMENT DE L'APPLICATION (web uniquement) ---------- */
+.dl-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px}
+.dl-card{
+  border-radius:8px;padding:26px 26px 24px;
+  background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.018));
+  border:1px solid var(--line);display:flex;flex-direction:column;gap:13px;
+}
+/* .feature et non .main : « main » entrerait en collision avec le <main> de
+   la coque application, et querySelector('.main') attraperait cette carte. */
+.dl-card.feature{border-color:rgba(255,59,69,.4);box-shadow:0 0 0 1px rgba(255,59,69,.16),0 18px 50px rgba(255,59,69,.08)}
+.dl-card h3{font-size:20px;letter-spacing:-.01em}
+.dl-card>p{color:var(--muted);font-size:14px}
+.dl-card ul{list-style:none;display:flex;flex-direction:column;gap:7px;margin-top:2px}
+.dl-card li{font-size:13.5px;color:var(--muted);padding-left:20px;position:relative}
+.dl-card li::before{content:"—";position:absolute;left:0;color:var(--dim)}
+.dl-card li.no{color:var(--dim)}
+.dl-card li.no::before{content:"×";color:var(--myth)}
+.dl-card .btn{align-self:flex-start;margin-top:6px;text-decoration:none}
+.dl-note{
+  font-family:'JetBrains Mono';font-size:10px;letter-spacing:.08em;line-height:1.6;
+  text-transform:uppercase;color:var(--dim);margin-top:auto;padding-top:6px;
+}
+.dl-note b{color:var(--tradeoff);font-weight:500}
+
+/* ---------- MODE NATIF (application de bureau) ----------
+   Tout est conditionné à body.native, ajouté par le bloc script 6
+   uniquement quand window.RP est présent. La version web n'est pas touchée. */
+body.native .web-only{display:none}
+/* Le site devient une application : on masque tout ce qui relève de la vitrine */
+body.native .nav,
+body.native .hero,
+body.native #methode,
+body.native #verdicts,
+body.native #app,
+body.native footer,
+body.native .dock{display:none}
+/* Le hero est masqué, mais sa jauge, son icosaèdre et son sol animé sont
+   déplacés dans le tableau de bord par le bloc 6 — pas supprimés. */
+body.native .scan{opacity:.28}
+body.native{overflow:hidden}
+body.native .page{padding:0}
+body.native #console{padding:0;max-width:none}
+body.native #console .sec-head{display:none}
+body.native .tabs{display:none}
+body.native .grid{grid-template-columns:repeat(auto-fill,minmax(360px,1fr))}
+
+/* ---- Coque application ---- */
+.shell{position:fixed;inset:0 0 56px 0;display:flex;z-index:40}
+.side{
+  width:252px;flex:none;display:flex;flex-direction:column;gap:2px;
+  padding:20px 14px;overflow-y:auto;
+  background:rgba(10,7,9,.72);backdrop-filter:blur(22px);
+  border-right:1px solid var(--line);
+}
+.side-logo{display:flex;align-items:center;gap:11px;padding:0 8px 22px}
+.side-logo .mk{
+  width:34px;height:34px;border-radius:9px;flex:none;background:var(--grad);
+  display:grid;place-items:center;font:700 17px 'Space Grotesk';color:#fff;
+  box-shadow:0 6px 20px rgba(255,59,69,.4);
+}
+.side-logo b{display:block;font:700 15px 'Space Grotesk';letter-spacing:-.01em;line-height:1.15}
+.side-logo b span{color:var(--volt)}
+.side-logo i{
+  font-style:normal;font-family:'JetBrains Mono';font-size:8.5px;
+  letter-spacing:.18em;text-transform:uppercase;color:var(--dim);
+}
+.side-sec{
+  font-family:'JetBrains Mono';font-size:9px;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--dim);padding:18px 10px 8px;
+}
+.side-item{
+  display:flex;align-items:center;gap:10px;width:100%;text-align:left;
+  padding:9px 11px;border-radius:6px;font-size:14px;color:var(--muted);
+  transition:background .18s,color .18s;
+}
+.side-item:hover{background:rgba(255,255,255,.05);color:var(--ink)}
+.side-item.on{background:var(--grad);color:#fff;box-shadow:0 6px 20px rgba(255,59,69,.28)}
+.side-item .lbl{flex:1}
+.side-item .cnt{font-family:'JetBrains Mono';font-size:10.5px;color:var(--dim)}
+.side-item.on .cnt{color:rgba(255,255,255,.85)}
+.side-item .cnt.full{color:#3FB950}
+.side-item.on .cnt.full{color:#B7F5C4}
+
+.main{flex:1;overflow-y:auto;padding:30px 34px 40px}
+.view{display:none}
+.view.on{display:block}
+
+/* ---- Tableau de bord ---- */
+.dash-top{display:flex;gap:34px;align-items:flex-start;flex-wrap:wrap;margin-bottom:26px}
+.dash-intro{flex:1;min-width:320px}
+
+/* ---- Éléments 3D récupérés du hero ----
+   .gauge-wrap et #floor sont déplacés ici par le bloc 6. Les tailles sont
+   réduites : le hero les dimensionnait pour un plein écran de site vitrine. */
+.dash-gauge{flex:none;width:330px;display:flex;justify-content:center}
+body.native .gauge-wrap{gap:16px;width:100%}
+body.native .gauge{width:min(238px,26vw)}
+body.native .g-center .val{font-size:40px}
+body.native .g-center .lbl{font-size:8.5px}
+body.native .g-delta{font-size:11px;margin-top:6px}
+body.native #ico{opacity:.42;top:30%}
+body.native .seg-card{width:100%}
+/* Le sol animé devient le fond de la zone principale, sous le contenu */
+body.native #floor{
+  position:fixed;left:252px;right:0;bottom:56px;top:auto;height:34vh;width:auto;
+  z-index:0;opacity:.75;
+}
+.dash-intro h2{font-size:34px;font-weight:700;letter-spacing:-.02em;margin:14px 0 10px}
+.dash-intro p{color:var(--muted);font-size:14.5px;max-width:560px}
+
+.band{
+  border:1px solid rgba(255,59,69,.4);border-radius:10px;padding:22px 24px;margin-bottom:22px;
+  background:linear-gradient(120deg,rgba(255,59,69,.09),rgba(255,59,69,.02));
+  display:flex;gap:24px;align-items:center;flex-wrap:wrap;
+}
+.band .txt{flex:1;min-width:280px}
+.band .kicker{
+  font-family:'JetBrains Mono';font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--volt);
+}
+.band h3{font-size:21px;margin:7px 0 8px;letter-spacing:-.01em}
+.band p{color:var(--muted);font-size:13.5px}
+.band .count{font-family:'JetBrains Mono';font-size:13px;color:var(--ink);margin-top:12px}
+.band .count b{color:var(--volt);font-size:17px}
+.band .acts{display:flex;flex-direction:column;gap:9px;align-items:stretch;min-width:230px}
+.band .acts .sub{
+  font-family:'JetBrains Mono';font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--dim);text-align:right;
+}
+
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px}
+.tile{
+  border-radius:8px;padding:16px 18px;border:1px solid var(--line);
+  background:linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,.015));
+}
+.tile .k{
+  font-family:'JetBrains Mono';font-size:9px;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--dim);margin-bottom:9px;
+}
+.tile .v{font-size:14.5px;line-height:1.45;color:var(--ink)}
+.tile .v small{display:block;color:var(--muted);font-size:12.5px;margin-top:3px}
+
+/* ---- Barre d'état ---- */
+.statusbar{
+  position:fixed;left:0;right:0;bottom:0;height:56px;z-index:80;
+  display:flex;align-items:center;gap:26px;padding:0 20px;
+  background:rgba(10,7,9,.9);backdrop-filter:blur(22px);
+  border-top:2px solid rgba(255,59,69,.28);
+}
+.statusbar .st{
+  font-family:'JetBrains Mono';font-size:9px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--dim);line-height:1.4;
+}
+.statusbar .st b{display:block;font:700 15px 'Space Grotesk';letter-spacing:0;color:var(--ink)}
+.statusbar .st b.g{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.statusbar .st b.ok{color:#3FB950}
+.statusbar .st b.no{color:var(--tradeoff)}
+.statusbar .sp{flex:1}
+.statusbar .sep{width:1px;height:28px;background:var(--line)}
+
+/* ---- État d'un réglage sur sa carte ---- */
+.card.applied{border-color:rgba(63,185,80,.45);box-shadow:0 0 0 1px rgba(63,185,80,.18)}
+.b-state{
+  font-family:'JetBrains Mono';font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;
+  padding:3.5px 10px;border-radius:3px;border:1px solid;white-space:nowrap;
+}
+.b-on{color:#3FB950;border-color:rgba(63,185,80,.4);background:rgba(63,185,80,.1)}
+.b-off{color:var(--dim);border-color:var(--line2);background:rgba(255,255,255,.03)}
+.b-unk{color:var(--tradeoff);border-color:rgba(255,176,32,.35);background:rgba(255,176,32,.07)}
+
+/* ---- Bandeau de mise à jour ---- */
+.upd{
+  display:none;align-items:center;gap:18px;flex-wrap:wrap;
+  border:1px solid rgba(255,59,69,.45);border-radius:9px;padding:15px 19px;margin-bottom:20px;
+  background:linear-gradient(120deg,rgba(255,59,69,.11),rgba(255,59,69,.03));
+}
+.upd.show{display:flex}
+.upd .txt{flex:1;min-width:260px}
+.upd .k{
+  font-family:'JetBrains Mono';font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--volt);
+}
+.upd .t{font-size:15.5px;font-weight:600;margin-top:5px}
+.upd .d{font-size:13px;color:var(--muted);margin-top:3px}
+.upd .bar{
+  width:100%;height:6px;border-radius:3px;margin-top:11px;
+  background:rgba(255,255,255,.1);overflow:hidden;display:none;
+}
+.upd .bar.show{display:block}
+.upd .bar i{display:block;height:100%;width:0;background:var(--grad);transition:width .25s linear}
+.upd .acts{display:flex;gap:9px;align-items:center}
+.statusbar .ver{
+  font-family:'JetBrains Mono';font-size:9.5px;letter-spacing:.1em;color:var(--dim);
+}
+.statusbar .ver b{color:var(--muted);font-weight:400}
+.statusbar .ver .maj{color:var(--volt)}
+
+.admin-warn{
+  border:1px solid rgba(255,176,32,.35);background:rgba(255,176,32,.08);
+  border-radius:8px;padding:13px 17px;margin-bottom:20px;
+  display:flex;align-items:center;gap:16px;flex-wrap:wrap;
+}
+.admin-warn p{flex:1;min-width:280px;font-size:13.5px;color:var(--muted)}
+.admin-warn b{color:var(--tradeoff)}
+.runstate{
+  display:flex;align-items:center;gap:11px;margin-bottom:14px;
+  font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);
+}
+.runstate .dot{width:9px;height:9px;border-radius:50%;background:var(--tradeoff);animation:demoPulse 1.1s infinite}
+.runstate.done .dot{background:#3FB950;animation:none}
+.runstate.fail .dot{background:var(--volt);animation:none}
+.runlog{
+  font-family:'JetBrains Mono';font-size:11.5px;line-height:1.65;color:#C9D6E3;
+  background:#060507;border:1px solid var(--line);border-radius:8px;padding:17px;
+  white-space:pre-wrap;word-break:break-word;overflow:auto;height:52vh;
+}
+.card.flash{animation:cardFlash .62s cubic-bezier(.2,.8,.3,1)}
+@keyframes cardFlash{
+  0%  {box-shadow:0 0 0 0 rgba(255,59,69,.55),0 16px 46px rgba(255,59,69,.09)}
+  35% {box-shadow:0 0 0 7px rgba(255,59,69,.20),0 22px 60px rgba(255,59,69,.30)}
+  100%{box-shadow:0 0 0 1px rgba(255,59,69,.22),0 16px 46px rgba(255,59,69,.09)}
+}
+
 footer{padding:70px 24px 130px;text-align:center}
 footer p{font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim)}
 
@@ -437,19 +640,18 @@ footer p{font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.1em;text-
 
 <nav class="nav">
   <a class="logo" href="#top">
-    <span class="logo-mark"><svg width="20" height="20" viewBox="0 0 64 64" aria-hidden="true"><g fill="#fff" transform="translate(15.5,17) skewX(-7.4)"><path d="M0,0 H13.2 L17.1,3.8 V10.1 L13.2,13.9 H0 Z M6,3.5 H11.6 L13.2,5 V8.8 L11.6,10.4 H6 Z" fill-rule="evenodd"/><path d="M0,12 H6 V28 H0 Z"/><path d="M8.4,12 H14.1 L21.3,28 H15.3 Z"/><path d="M25.2,0 H38.4 L42.3,3.8 V11.2 L38.4,15 H31.2 V28 H25.2 Z M31.2,3.5 H36.8 L38.4,5 V9.9 L36.8,11.5 H31.2 Z" fill-rule="evenodd"/></g></svg></span>
+    <span class="logo-mark">R</span>
     <b>RADICAL <span>PERFORMANCE</span></b>
   </a>
   <div class="nav-links">
     <a href="#methode">La méthode</a>
     <a href="#verdicts">Les verdicts</a>
     <a href="#console">La console</a>
+    <a href="#app" class="web-only">L'application</a>
   </div>
   <div class="sp"></div>
-  <a class="btn btn-g btn-sm" id="navDl" href="https://github.com/tlonchambon95-cpu/radical-performance-downloads/releases/latest/download/RadicalPerformance-Setup.exe" target="_blank" rel="noopener">
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/></svg>
-    Télécharger
-  </a>
+  <button class="btn btn-ghost btn-sm" id="btnInstall" hidden>Installer l'app</button>
+  <button class="btn btn-g btn-sm" onclick="document.getElementById('console').scrollIntoView()">Ouvrir la console</button>
 </nav>
 
 <!-- ================= HERO ================= -->
@@ -457,21 +659,13 @@ footer p{font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.1em;text-
   <canvas id="floor" aria-hidden="true"></canvas>
   <div class="hero-title" aria-hidden="true"><span class="t">Radical</span><span class="t">Performance</span></div>
   <div>
-    <span class="chip"><span class="pulse"></span>Radical Performance · Call of Duty compétitif</span>
+    <span class="chip"><span class="pulse"></span>Un outil WestLab · Call of Duty compétitif</span>
     <h1>Chaque <span class="grad-text">milliseconde</span> est une décision.</h1>
     <p class="sub">Radical Performance mesure ton budget de latence du clic au pixel, arme uniquement les réglages qui ont un effet démontré, et génère un script PowerShell transparent — avec son retour arrière. Pas de magie, pas de placebo.</p>
     <div class="cta">
-      <a class="btn btn-g" id="heroDl" href="https://github.com/tlonchambon95-cpu/radical-performance-downloads/releases/latest/download/RadicalPerformance-Setup.exe" target="_blank" rel="noopener">
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/></svg>
-        Télécharger l'application
-      </a>
-      <button class="btn btn-ghost" onclick="document.getElementById('console').scrollIntoView()">Ouvrir la console</button>
+      <button class="btn btn-g" onclick="document.getElementById('console').scrollIntoView()">Ouvrir la console</button>
       <button class="btn btn-ghost" onclick="document.getElementById('methode').scrollIntoView()">Voir la méthode</button>
     </div>
-    <!-- Ligne d'informations sous les boutons. Le numero de version est vide au depart et
-         rempli par JavaScript depuis l'API GitHub : si la requete echoue, la ligne reste
-         lisible et correcte, simplement sans le numero. -->
-    <p class="dl-meta"><span id="dlVer" hidden></span>Windows 10 et 11 · 64 bits · Gratuit</p>
     <div class="strip">
       <span>51 réglages vérifiés</span>
       <span>4 verdicts</span>
@@ -546,6 +740,49 @@ footer p{font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.1em;text-
   </div>
 </section>
 
+<!-- ================= APPLICATION ================= -->
+<!-- .web-only : masqué quand on est déjà dans l'application de bureau -->
+<section class="wrap sec-pad web-only" id="app">
+  <div class="sec-head rv">
+    <span class="chip"><span class="pulse"></span>L'application</span>
+    <h2>La version bureau applique les réglages elle-même</h2>
+    <p>Cette page ne peut pas modifier Windows : aucun navigateur n'a le droit de toucher au registre, aux services ou au plan d'alimentation. Elle écrit donc un script que tu exécutes toi-même. L'application de bureau, elle, applique et annule directement.</p>
+  </div>
+  <div class="dl-grid">
+
+    <div class="dl-card feature rv">
+      <h3>Application Windows</h3>
+      <p>Les 51 réglages appliqués depuis l'interface, en une seule autorisation.</p>
+      <ul>
+        <li>Un clic sur « Appliquer », rien à copier</li>
+        <li>Retour arrière en un bouton</li>
+        <li>Affiche l'état réel de ta machine</li>
+        <li>Point de restauration créé avant toute modification</li>
+      </ul>
+      <a class="btn btn-g" href="https://github.com/tlonchambon95-cpu/radical-performance-downloads/releases/latest/download/RadicalPerformance-Setup.exe">Télécharger — 95 Mo</a>
+      <span class="dl-note">
+        Windows 10/11 64 bits · version 2.3.0<br>
+        <b>Application non signée</b> — Windows affichera « Windows a protégé votre PC » :
+        cliquer sur « Informations complémentaires » puis « Exécuter quand même ».
+      </span>
+    </div>
+
+    <div class="dl-card rv">
+      <h3>Cette page</h3>
+      <p>Tout consulter et préparer sa configuration, sans rien installer.</p>
+      <ul>
+        <li>Les 51 réglages, verdicts et explications</li>
+        <li>Budget de latence et profil tournoi</li>
+        <li>Script PowerShell réversible à télécharger</li>
+        <li class="no">N'applique rien : à exécuter soi-même en administrateur</li>
+      </ul>
+      <button class="btn btn-ghost" onclick="document.getElementById('console').scrollIntoView()">Ouvrir la console</button>
+      <span class="dl-note">Fonctionne aussi hors ligne une fois installée depuis le navigateur.</span>
+    </div>
+
+  </div>
+</section>
+
 <!-- ================= CONSOLE ================= -->
 <section class="wrap sec-pad" id="console">
   <div class="sec-head rv">
@@ -558,10 +795,12 @@ footer p{font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.1em;text-
 </section>
 
 <footer>
-  <p>Radical Performance · Valeurs indicatives (modèle 240 Hz · RTT 30 ms) · <span class="legal-link" id="openLegal" role="button" tabindex="0">Mentions légales &amp; responsabilité</span></p>
+  <p>Radical Performance · un outil WestLab — Vendée · Valeurs indicatives (modèle 240 Hz · RTT 30 ms) · <span class="legal-link" id="openLegal" role="button" tabindex="0">Mentions légales &amp; responsabilité</span></p>
 </footer>
 
 </div><!-- /page -->
+
+<div class="demo-bar" id="demoBar"></div>
 
 <!-- dock -->
 <div class="dock">
@@ -571,6 +810,7 @@ footer p{font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.1em;text-
   <div class="sep"></div>
   <div class="st">Manuels<b id="dManual">0</b></div>
   <div class="sp"></div>
+  <button class="btn btn-ghost btn-sm" id="btnDemo">Mode démo</button>
   <button class="btn btn-ghost btn-sm" id="btnPreset">Profil tournoi</button>
   <button class="btn btn-ghost btn-sm" id="btnClear">Désarmer</button>
   <button class="btn btn-g btn-sm" id="btnGen" disabled>Générer le script</button>
@@ -626,7 +866,7 @@ footer p{font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.1em;text-
       <p>Radical Performance est un outil pédagogique. Les scripts générés modifient la configuration de Windows (registre, plans d'alimentation, services) et certains réglages, clairement identifiés « Compromis », réduisent des protections de sécurité du système. L'exécution de ces scripts se fait sous la seule responsabilité de l'utilisateur, après lecture et sur une machine dont il assume l'administration. Il est recommandé de tester en environnement contrôlé et de conserver le script de retour arrière. Les valeurs de latence affichées proviennent d'un modèle indicatif et ne constituent ni une mesure ni une garantie de gain.</p>
       <h4>Données personnelles</h4>
       <p>Ce site ne dépose aucun cookie, n'embarque aucun traceur publicitaire ni outil de mesure d'audience, et ne collecte aucune donnée personnelle. Les polices de caractères sont auto-hébergées : aucune requête n'est émise vers un serveur de polices.</p>
-      <p>Une seule requête est adressée à un service externe : la page interroge l'API publique de GitHub (<span class="ph">api.github.com</span>) pour afficher le numéro de la dernière version de l'application disponible au téléchargement. Cette requête est anonyme et en lecture seule — aucune donnée vous concernant n'est transmise —, mais elle expose nécessairement votre adresse IP à GitHub, comme le ferait n'importe quel lien vers ce site. Elle n'est pas indispensable au fonctionnement de la page : si vous la bloquez, seul le numéro de version disparaît.</p>
+      <p>Cette page n’émet <b>aucune requête vers un service externe</b>. Les polices sont auto-hébergées et intégrées au fichier, les icônes sont servies depuis ce domaine. Le bouton de téléchargement est un simple lien : rien n’est chargé depuis GitHub tant que vous ne cliquez pas dessus.</p>
       <h4>Propriété intellectuelle</h4>
       <p>« Radical Performance » ainsi que le contenu de ce site sont la propriété de leur éditeur. Call of Duty est une marque d'Activision Publishing, Inc. ; ce site est indépendant et n'est ni affilié ni approuvé par Activision.</p>
     </div>
@@ -839,7 +1079,10 @@ Set-ItemProperty "HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multim
    {id:'net-nic',v:'real',seg:'net',ms:2.5,t:"Économies d'énergie de la carte réseau",
     d:"Coupe Interrupt Moderation, Energy Efficient Ethernet et Green Ethernet sur l'adaptateur actif.",
     why:"L'Interrupt Moderation regroupe les interruptions pour économiser du CPU — au prix direct de latence. En compétition, on privilégie la latence.",
-    cmd:`$nic = Get-NetAdapter | Where-Object {$_.Status -eq "Up" -and $_.PhysicalMediaType -notlike "*802.11*"} | Select-Object -First 1
+    cmd:`# Carte portant la route par defaut : les cartes virtuelles (VMware,
+# VirtualBox, Hyper-V, VPN) sont "Up" aussi et passent souvent en premier.
+$idx = (Get-NetRoute -DestinationPrefix "0.0.0.0/0" -ErrorAction SilentlyContinue | Sort-Object RouteMetric, ifMetric | Select-Object -First 1).InterfaceIndex
+$nic = if ($idx) { Get-NetAdapter -InterfaceIndex $idx -ErrorAction SilentlyContinue } else { $null }
 if ($nic) {
     $props = "Interrupt Moderation","Energy-Efficient Ethernet","Green Ethernet","Flow Control","Ultra Low Power Mode"
     foreach ($p in $props) {
@@ -848,7 +1091,8 @@ if ($nic) {
     Disable-NetAdapterPowerManagement -Name $nic.Name -ErrorAction SilentlyContinue
     Write-Host "  Carte traitee : $($nic.Name)"
 }`,
-    rev:`$nic = Get-NetAdapter | Where-Object {$_.Status -eq "Up"} | Select-Object -First 1
+    rev:`$idx = (Get-NetRoute -DestinationPrefix "0.0.0.0/0" -ErrorAction SilentlyContinue | Sort-Object RouteMetric, ifMetric | Select-Object -First 1).InterfaceIndex
+$nic = if ($idx) { Get-NetAdapter -InterfaceIndex $idx -ErrorAction SilentlyContinue } else { $null }
 if ($nic) { Reset-NetAdapterAdvancedProperty -Name $nic.Name -DisplayName "*" -ErrorAction SilentlyContinue }`},
 
    {id:'net-tcp',v:'real',seg:'net',ms:0.8,t:"Remise à zéro de la pile TCP",
@@ -863,11 +1107,18 @@ netsh int tcp set supplemental Internet congestionprovider=cubic`,
    {id:'net-dns',v:'marginal',seg:'net',ms:0,t:"DNS Cloudflare 1.1.1.1",
     d:"Bascule la résolution de noms sur Cloudflare / Quad9.",
     why:"Aucun effet sur ton ping en partie — le DNS ne sert qu'à trouver l'adresse d'un serveur, pas à lui parler. Gain réel sur les temps de connexion aux services et le matchmaking. Je le classe honnêtement en marginal.",
-    cmd:`$nic = Get-NetAdapter | Where-Object {$_.Status -eq "Up"} | Select-Object -First 1
-Set-DnsClientServerAddress -InterfaceAlias $nic.Name -ServerAddresses ("1.1.1.1","1.0.0.1")
-Clear-DnsClientCache`,
-    rev:`$nic = Get-NetAdapter | Where-Object {$_.Status -eq "Up"} | Select-Object -First 1
-Set-DnsClientServerAddress -InterfaceAlias $nic.Name -ResetServerAddresses`},
+    cmd:`# Carte portant la route par defaut, sinon le DNS atterrit sur une carte
+# virtuelle (VMware/VirtualBox/VPN) ou il ne sert a rien.
+$idx = (Get-NetRoute -DestinationPrefix "0.0.0.0/0" -ErrorAction SilentlyContinue | Sort-Object RouteMetric, ifMetric | Select-Object -First 1).InterfaceIndex
+if ($idx) {
+    Set-DnsClientServerAddress -InterfaceIndex $idx -ServerAddresses ("1.1.1.1","1.0.0.1")
+    Clear-DnsClientCache
+    Write-Host "  Carte traitee : $((Get-NetAdapter -InterfaceIndex $idx).Name)"
+} else {
+    Write-Host "  Aucune route par defaut trouvee - DNS inchange." -ForegroundColor Yellow
+}`,
+    rev:`$idx = (Get-NetRoute -DestinationPrefix "0.0.0.0/0" -ErrorAction SilentlyContinue | Sort-Object RouteMetric, ifMetric | Select-Object -First 1).InterfaceIndex
+if ($idx) { Set-DnsClientServerAddress -InterfaceIndex $idx -ResetServerAddresses }`},
 
    {id:'net-mtu',v:'myth',t:"« Optimiser le MTU »",
     d:"Chercher la taille de paquet parfaite à coups de ping -f -l.",
@@ -882,7 +1133,7 @@ Set-DnsClientServerAddress -InterfaceAlias $nic.Name -ResetServerAddresses`},
   id:'win', name:'Windows',
   title:'Système',
   intro:"L'objectif n'est pas de « nettoyer » Windows — c'est de garantir qu'aucun processus tiers ne vienne voler du temps CPU pendant une manche. Un debloat agressif casse plus de choses qu'il n'en répare.",
-  note:{t:"Règle Radical Performance", p:"On ne désactive jamais un service qu'on ne sait pas nommer. Chaque ligne de ce module est réversible et documentée. Si un « optimiseur » coupe 60 services sans te dire lesquels, désinstalle-le."},
+  note:{t:"Règle WestLab", p:"On ne désactive jamais un service qu'on ne sait pas nommer. Chaque ligne de ce module est réversible et documentée. Si un « optimiseur » coupe 60 services sans te dire lesquels, désinstalle-le."},
   tweaks:[
    {id:'win-vbs',v:'tradeoff',seg:'pc',ms:3.0,t:"Intégrité de la mémoire (VBS / HVCI)",
     d:"Désactive la virtualisation de sécurité. Gain mesuré de 5 à 10 % de FPS selon les configurations.",
@@ -1116,6 +1367,7 @@ function buildTabs(){
     b.setAttribute('role','tab');
     b.innerHTML = `${m.name}<span class="n"></span>`;
     b.onclick = () => {
+      if (DEMO.on) demoStop('Démo interrompue');
       currentModule = m.id;
       document.querySelectorAll('.tab').forEach(t => t.classList.toggle('on', t === b));
       renderModule();
@@ -1143,6 +1395,7 @@ function card(t){
   const isMyth = t.v === 'myth';
   const c = document.createElement('div');
   c.className = 'card' + (isMyth ? ' myth' : '') + (armed.has(t.id) ? ' armed' : '');
+  c.dataset.tw = t.id;
 
   const badges = [`<span class="badge ${VERDICT[t.v].cls}">${VERDICT[t.v].label}</span>`];
   if (t.manual) badges.push('<span class="badge b-manual">Manuel</span>');
@@ -1165,6 +1418,7 @@ function card(t){
   if (sw){
     sw.setAttribute('aria-label', 'Armer : ' + t.t);
     sw.onclick = () => {
+      if (DEMO.on) demoStop('Démo interrompue');
       armed.has(t.id) ? armed.delete(t.id) : armed.add(t.id);
       const on = armed.has(t.id);
       c.classList.toggle('armed', on);
@@ -1194,6 +1448,119 @@ document.getElementById('btnPreset').onclick = () => {
   toast('Profil tournoi armé — compromis sécurité exclus');
 };
 document.getElementById('btnClear').onclick = () => { armed.clear(); renderModule(); };
+
+/* ================= MODE DÉMO =================
+   Arme le profil tournoi carte par carte, module par module, en séquence.
+   Destiné à une présentation vidéo/salon : la jauge, les compteurs du dock et
+   les pastilles d'onglet montent en direct pendant le défilement.
+   Même sélection que « Profil tournoi » : real + marginal, jamais tradeoff ni myth.
+   Interruptible à tout moment (bouton, Échap, clic sur un onglet ou un interrupteur). */
+const DEMO = { on:false, token:0 };
+const DEMO_STEP = 320;   // délai entre deux cartes armées (ms)
+const DEMO_MOD  = 700;   // pause à chaque changement de module (ms)
+const PREF_REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+const demoSleep = ms => new Promise(r => setTimeout(r, ms));
+const demoEligible = t => t.v === 'real' || t.v === 'marginal';
+
+/* [{m, list}] — modules ayant au moins un réglage armable, dans l'ordre des onglets */
+function demoPlan(){
+  return MODULES
+    .map(m => ({ m, list: m.tweaks.filter(demoEligible) }))
+    .filter(x => x.list.length);
+}
+
+function demoProgress(pct){
+  document.getElementById('demoBar').style.width = pct.toFixed(1) + '%';
+}
+
+function demoSetUI(on){
+  const b = document.getElementById('btnDemo');
+  b.textContent = on ? 'Arrêter la démo' : 'Mode démo';
+  b.classList.toggle('on', on);
+  document.getElementById('demoBar').classList.toggle('show', on);
+  document.getElementById('btnPreset').disabled = on;
+  document.getElementById('btnClear').disabled  = on;
+}
+
+/* Invalide le token : la boucle en cours sort à sa prochaine vérification */
+function demoStop(msg){
+  DEMO.on = false;
+  DEMO.token++;
+  demoSetUI(false);
+  demoProgress(0);
+  if (msg) toast(msg);
+}
+
+function demoSelectTab(modId){
+  currentModule = modId;
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('on', t.dataset.mod === modId));
+  renderModule();
+}
+
+/* Amène la carte dans la zone lisible : sous les onglets collants, au-dessus du dock */
+function demoScrollTo(el){
+  const r = el.getBoundingClientRect();
+  if (r.top < 150 || r.bottom > window.innerHeight - 130){
+    el.scrollIntoView({ block:'center', behavior:'smooth' });
+  }
+}
+
+/* Arme un réglage en mutant la carte existante — pas de renderModule(),
+   qui casserait le défilement et l'animation en recréant le DOM */
+function demoArm(t){
+  armed.add(t.id);
+  const c = document.querySelector('#grid [data-tw="' + t.id + '"]');
+  if (c){
+    c.classList.add('armed');
+    const sw = c.querySelector('.sw');
+    if (sw){ sw.classList.add('on'); sw.setAttribute('aria-checked','true'); }
+    c.classList.remove('flash'); void c.offsetWidth; c.classList.add('flash');
+    demoScrollTo(c);
+  }
+  updateAll();
+}
+
+async function runDemo(){
+  const plan  = demoPlan();
+  const total = plan.reduce((a, x) => a + x.list.length, 0);
+  const token = ++DEMO.token;
+  DEMO.on = true;
+  demoSetUI(true);
+
+  armed.clear();
+  demoProgress(0);
+  document.getElementById('console').scrollIntoView({ behavior:'smooth', block:'start' });
+  await demoSleep(750);
+  if (token !== DEMO.token) return;
+
+  let done = 0;
+  for (const { m, list } of plan){
+    demoSelectTab(m.id);
+    toast('Module ' + m.name + ' · ' + list.length + ' réglage' + (list.length > 1 ? 's' : ''));
+    await demoSleep(DEMO_MOD);
+    if (token !== DEMO.token) return;
+
+    for (const t of list){
+      demoArm(t);
+      demoProgress(++done / total * 100);
+      await demoSleep(DEMO_STEP);
+      if (token !== DEMO.token) return;
+    }
+  }
+
+  DEMO.on = false;
+  demoSetUI(false);
+  toast('Profil tournoi armé — ' + total + ' réglages, compromis sécurité exclus');
+}
+
+document.getElementById('btnDemo').onclick = () => {
+  if (DEMO.on){ demoStop('Démo interrompue'); return; }
+  // Animation désactivée par préférence système : on arme sans séquence
+  if (PREF_REDUCED){ document.getElementById('btnPreset').click(); return; }
+  runDemo();
+};
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && DEMO.on) demoStop('Démo interrompue'); });
 
 /* ================= SCRIPT POWERSHELL ================= */
 function buildScript(revert=false){
@@ -1248,7 +1615,7 @@ function buildScript(revert=false){
     const n = pad(i+1);
     s += `# ----------------------------------------------------------\n`;
     s += `# [${n}] ${t.t}\n`;
-    s += `#      Verdict Radical Performance : ${VERDICT[t.v].label}\n`;
+    s += `#      Verdict WestLab : ${VERDICT[t.v].label}\n`;
     s += `# ----------------------------------------------------------\n`;
     s += `Write-Host "[${n}] ${t.t.replace(/"/g,'')}" -ForegroundColor Cyan\n`;
     s += (revert ? t.rev : t.cmd) + `\n\n`;
@@ -1487,42 +1854,6 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') closeL(); })
 </script>
 
 <script>
-/* ---------- Numero de la derniere version publiee ----------
-   Interroge l'API GitHub pour afficher la version reellement disponible au
-   telechargement, plutot qu'un numero ecrit en dur qui deviendrait faux a la
-   premiere mise a jour.
-
-   Degradation volontaire : si l'appel echoue (hors ligne, quota d'API atteint,
-   GitHub indisponible), on n'affiche simplement pas le numero. Les boutons de
-   telechargement, eux, sont de vrais liens ecrits dans le HTML : ils fonctionnent
-   meme sans JavaScript. Le site ne depend jamais de cet appel pour etre utile. */
-(() => {
-  const DEPOT = 'tlonchambon95-cpu/radical-performance-downloads';
-  fetch(`https://api.github.com/repos/${DEPOT}/releases/latest`, {
-    headers: { 'Accept': 'application/vnd.github+json' }
-  })
-    .then(r => r.ok ? r.json() : Promise.reject(r.status))
-    .then(d => {
-      const version = (d.tag_name || '').replace(/^v/i, '');
-      if (!version) return;
-
-      const el = document.getElementById('dlVer');
-      if (el) {
-        el.innerHTML = 'Version <b>' + version + '</b> · ';
-        el.hidden = false;
-      }
-
-      // Poids reel de l'archive, tel que publie
-      const zip = (d.assets || []).find(a => /Setup\.exe$/i.test(a.name));
-      if (zip && zip.size) {
-        const mo = Math.round(zip.size / 1048576);
-        const meta = document.querySelector('.dl-meta');
-        if (meta) meta.insertAdjacentText('beforeend', ' · ' + mo + ' Mo');
-      }
-    })
-    .catch(() => { /* silencieux : les liens restent fonctionnels */ });
-})();
-
 /* pause des rendus du hero hors écran */
 (() => {
   window.__heroLive = true;
@@ -1531,6 +1862,671 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') closeL(); })
     new IntersectionObserver(es => es.forEach(e => { window.__heroLive = e.isIntersecting; }))
       .observe(heroEl);
   }
+})();
+</script>
+
+<script>
+/* ================= PWA : INSTALLATION & HORS LIGNE =================
+   Enregistre le service worker et pilote le bouton « Installer l'app ».
+   Rien de tout ceci ne fonctionne en file:// — l'API exige un contexte
+   sécurisé (https:// ou http://localhost). L'application reste
+   parfaitement utilisable sans, simplement non installable. */
+(() => {
+  const btn = document.getElementById('btnInstall');
+  const say = m => (typeof toast === 'function' ? toast(m) : void 0);
+
+  /* Déjà lancée en fenêtre autonome : inutile de proposer l'installation */
+  const installed = matchMedia('(display-mode: standalone)').matches
+                 || window.navigator.standalone === true;
+
+  /* ---------- Service worker ---------- */
+  if ('serviceWorker' in navigator && location.protocol !== 'file:'){
+    window.addEventListener('load', async () => {
+      try {
+        const reg = await navigator.serviceWorker.register('sw.js', { scope: './' });
+        reg.addEventListener('updatefound', () => {
+          const sw = reg.installing;
+          if (!sw) return;
+          sw.addEventListener('statechange', () => {
+            // un contrôleur existait déjà => c'est une mise à jour, pas la 1re installation
+            if (sw.state === 'installed' && navigator.serviceWorker.controller){
+              say('Nouvelle version installée — relance l’application');
+            }
+          });
+        });
+      } catch (e) {
+        console.warn('Service worker non enregistré :', e.message);
+      }
+    });
+  }
+
+  /* ---------- Invite d'installation ---------- */
+  let deferred = null;
+
+  window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault();          // on garde la main sur le moment de l'invite
+    deferred = e;
+    if (!installed && btn) btn.hidden = false;
+  });
+
+  if (btn){
+    btn.onclick = async () => {
+      if (!deferred) return;
+      btn.disabled = true;
+      deferred.prompt();
+      const { outcome } = await deferred.userChoice;
+      deferred = null;                       // une invite n'est utilisable qu'une fois
+      btn.disabled = false;
+      if (outcome === 'accepted') btn.hidden = true;
+      else say('Installation annulée — le bouton reste disponible');
+    };
+  }
+
+  window.addEventListener('appinstalled', () => {
+    deferred = null;
+    if (btn) btn.hidden = true;
+    say('Radical Performance est installé');
+  });
+})();
+</script>
+
+<script>
+/* ================= COUCHE NATIVE (application de bureau) =================
+   Ne s'active que si window.RP existe, c'est-à-dire dans la coque Electron.
+   Sur le web, ce bloc sort immédiatement et la page garde son comportement :
+   génération d'un script à exécuter soi-même.
+
+   Différence de fond avec le web : l'interface n'affiche plus des cases
+   cochées mais l'ÉTAT VÉRIFIÉ de la machine, relu réglage par réglage par
+   desktop/probes.js. La jauge de latence en découle : elle mesure ce qui est
+   réellement en place, pas ce que l'utilisateur a coché. */
+(() => {
+if (!window.RP || !RP.native) return;
+document.body.classList.add('native');
+
+let running  = false;
+let STATE    = {};      // id -> true (appliqué) | false (absent) | null (illisible)
+let ADMIN    = false;
+let MACHINE  = null;
+let currentView = 'dash';
+
+const known    = t => t.id in STATE;
+const scriptable = () => allTweaks().filter(known);
+const appliedOf  = m => m.tweaks.filter(t => STATE[t.id] === true).length;
+const probedOf   = m => m.tweaks.filter(known).length;
+
+/* ================= COQUE : BARRE LATÉRALE + ZONE PRINCIPALE ================= */
+const shell = document.createElement('div');
+shell.className = 'shell';
+shell.innerHTML = `
+  <aside class="side">
+    <div class="side-logo">
+      <span class="mk">R</span>
+      <span><b>RADICAL <span>PERFORMANCE</span></b><i>Optimiseur PC esport</i></span>
+    </div>
+    <button class="side-item on" data-view="dash"><span class="lbl">Tableau de bord</span></button>
+    <div class="side-sec">Réglages</div>
+    <div id="sideModules"></div>
+    <div class="side-sec">Système</div>
+    <button class="side-item" data-view="method"><span class="lbl">Méthode &amp; honnêteté</span></button>
+  </aside>
+  <main class="main" id="appMain">
+    <div class="view on" id="viewDash"></div>
+    <div class="view" id="viewModule"></div>
+    <div class="view" id="viewMethod"></div>
+  </main>`;
+document.body.appendChild(shell);
+
+const statusbar = document.createElement('div');
+statusbar.className = 'statusbar';
+statusbar.innerHTML = `
+  <div class="st">Statut<b id="sbAdmin">—</b></div>
+  <div class="sep"></div>
+  <div class="st">Appliqués<b id="sbApplied">—</b></div>
+  <div class="sep"></div>
+  <div class="st">Latence récupérée<b class="g" id="sbGain">—</b></div>
+  <div class="sep"></div>
+  <div class="st">Non vérifiables<b id="sbUnknown">—</b></div>
+  <div class="sp"></div>
+  <span class="ver" id="sbVersion"></span>
+  <button class="btn btn-ghost btn-sm" id="sbRefresh">Relire la machine</button>
+  <button class="btn btn-ghost btn-sm" id="sbRestore">Tout restaurer</button>
+  <button class="btn btn-g btn-sm" id="sbCompete">Mode compétition</button>`;
+document.body.appendChild(statusbar);
+
+/* La console existante devient la vue « module » : on déplace le conteneur
+   de cartes plutôt que de le recréer, pour garder card()/renderModule(). */
+document.getElementById('viewModule').appendChild(document.getElementById('moduleArea'));
+
+/* ================= RÉCUPÉRATION DES ÉLÉMENTS 3D DU HERO =================
+   Le hero est masqué en mode natif, mais il portait la jauge circulaire,
+   l'icosaèdre filaire (#ico, dans .gauge-wrap) et le sol animé (#floor).
+   On les DÉPLACE, on ne les perd pas. */
+const gaugeWrap = document.querySelector('.gauge-wrap');
+const floorCv   = document.getElementById('floor');
+const mainEl    = document.getElementById('appMain');   // pas querySelector('.main') : collision possible
+
+// Sans ça la jauge resterait à opacity:0 : son observateur de révélation
+// ne se déclenche plus une fois le hero masqué.
+gaugeWrap.classList.remove('rv');
+mainEl.insertBefore(floorCv, mainEl.firstChild);
+
+/* L'observateur du bloc 4 surveille .hero, désormais masqué : il remettrait
+   __heroLive à false en permanence et figerait les deux canvas, même si on le
+   repasse à true. On neutralise ses écritures et on pilote l'animation depuis
+   la visibilité réelle de la jauge — les rendus restent donc en pause dès
+   qu'on quitte le tableau de bord, ce qui était le but d'origine. */
+let heroLive = false;
+Object.defineProperty(window, '__heroLive', {
+  get: () => heroLive,
+  set: () => {},           // écritures du bloc 4 ignorées
+  configurable: true
+});
+if ('IntersectionObserver' in window){
+  new IntersectionObserver(es => es.forEach(e => { heroLive = e.isIntersecting; }))
+    .observe(gaugeWrap);
+} else {
+  heroLive = true;
+}
+
+/* Les deux canvas se dimensionnent via getBoundingClientRect() au chargement,
+   à un instant où ils étaient encore dans le hero. Après déplacement il faut
+   les recalculer : ils n'écoutent que l'événement resize. */
+const resizeCanvas = () => requestAnimationFrame(() => dispatchEvent(new Event('resize')));
+
+/* La section « Méthode » réutilise le texte des verdicts déjà présent */
+document.getElementById('viewMethod').innerHTML = `
+  <div class="dash-intro" style="margin-bottom:24px">
+    <span class="chip"><span class="pulse"></span>Méthode &amp; honnêteté</span>
+    <h2>Ce que l'application mesure, et ce qu'elle ne mesure pas</h2>
+  </div>
+  <div class="dl-card" style="max-width:820px">
+    <p>Chaque réglage est relu directement sur Windows — registre, plan d'alimentation, services, pile réseau. Trois réponses sont possibles, et la troisième compte autant que les autres :</p>
+    <ul>
+      <li><b>Appliqué</b> — vérifié sur la machine à l'instant</li>
+      <li><b>Non appliqué</b> — vérifié comme absent</li>
+      <li><b>Non vérifiable</b> — la lecture a échoué, souvent faute de droits administrateur. Afficher « non appliqué » ici serait un mensonge.</li>
+    </ul>
+    <p style="margin-top:14px">Les réglages <b>manuels</b> (BIOS, panneau du pilote, options en jeu) ne sont pas applicables par un programme : ils sont documentés, jamais automatisés. Les <b>mythes</b> sont affichés pour être démontés, jamais proposés.</p>
+    <p>La jauge de latence est un <b>modèle</b>, calibré sur une chaîne de référence. Elle sert à hiérarchiser les gains entre eux, pas à annoncer une milliseconde absolue. Elle ne compte que les réglages réellement en place.</p>
+  </div>`;
+
+/* ================= NAVIGATION ================= */
+function buildSide(){
+  const box = document.getElementById('sideModules');
+  box.innerHTML = '';
+  MODULES.forEach(m => {
+    const b = document.createElement('button');
+    b.className = 'side-item';
+    b.dataset.view = 'mod:' + m.id;
+    b.innerHTML = `<span class="lbl">${m.title}</span><span class="cnt"></span>`;
+    box.appendChild(b);
+  });
+}
+
+function setView(v){
+  currentView = v;
+  document.querySelectorAll('.side-item').forEach(b => b.classList.toggle('on', b.dataset.view === v));
+  const dash = v === 'dash', meth = v === 'method';
+  document.getElementById('viewDash').classList.toggle('on', dash);
+  document.getElementById('viewMethod').classList.toggle('on', meth);
+  document.getElementById('viewModule').classList.toggle('on', !dash && !meth);
+  if (!dash && !meth){
+    currentModule = v.slice(4);
+    renderModule();
+  }
+  mainEl.scrollTop = 0;
+}
+
+shell.addEventListener('click', e => {
+  const b = e.target.closest('.side-item');
+  if (b && !running) setView(b.dataset.view);
+});
+
+/* ================= JAUGE SUR L'ÉTAT VÉRIFIÉ =================
+   Remplace le calcul du web, qui additionne les cases cochées. */
+computeChain = function(){
+  const cur = {}; SEGMENTS.forEach(s => cur[s.id] = s.base);
+  allTweaks().forEach(t => {
+    if (STATE[t.id] === true && t.seg && t.ms){
+      const seg = SEGMENTS.find(s => s.id === t.seg);
+      cur[t.seg] = Math.max(cur[t.seg] - t.ms, seg.base * 0.35);
+    }
+  });
+  return cur;
+};
+
+/* updateAll() du web pilote des éléments absents en mode natif (dock, onglets).
+   On le remplace par une version qui alimente la coque application. */
+const CIRC_N = 2 * Math.PI * 126;
+updateAll = function(){
+  const cur = computeChain();
+  const now = SEGMENTS.reduce((a, s) => a + cur[s.id], 0);
+  const gain = BASE_TOTAL - now;
+
+  const g1 = document.getElementById('gNow');
+  if (g1){
+    g1.textContent = now.toFixed(1);
+    document.getElementById('gProg').style.strokeDashoffset = (CIRC_N * (1 - now / BASE_TOTAL)).toFixed(2);
+    const d = document.getElementById('gDelta');
+    d.textContent = '−' + gain.toFixed(1) + ' ms récupérées';
+    d.classList.toggle('show', gain > 0.05);
+  }
+  SEGMENTS.forEach(s => {
+    const v = document.querySelector('[data-cv="' + s.id + '"]');
+    if (v){
+      v.textContent = cur[s.id].toFixed(1) + ' ms';
+      document.querySelector('[data-fill="' + s.id + '"]').style.width = (cur[s.id] / s.base * 100).toFixed(1) + '%';
+    }
+  });
+
+  const all  = scriptable();
+  const on   = all.filter(t => STATE[t.id] === true).length;
+  const unk  = all.filter(t => STATE[t.id] === null).length;
+
+  document.getElementById('sbApplied').textContent = on + '/' + all.length;
+  document.getElementById('sbGain').textContent    = '−' + gain.toFixed(1) + ' ms';
+  document.getElementById('sbUnknown').textContent = unk;
+  const ad = document.getElementById('sbAdmin');
+  ad.textContent = ADMIN ? 'Administrateur' : 'Utilisateur';
+  ad.className = ADMIN ? 'ok' : 'no';
+
+  document.querySelectorAll('.side-item[data-view^="mod:"]').forEach(b => {
+    const m = MODULES.find(x => x.id === b.dataset.view.slice(4));
+    const p = probedOf(m), a = appliedOf(m);
+    const c = b.querySelector('.cnt');
+    c.textContent = p ? a + '/' + p : '';
+    c.classList.toggle('full', p > 0 && a === p);
+  });
+
+  document.getElementById('sbCompete').disabled = running;
+  document.getElementById('sbRestore').disabled = running || on === 0;
+  document.getElementById('sbRefresh').disabled = running;
+};
+
+/* ================= CARTES : ÉTAT RÉEL + APPLICATION DIRECTE ================= */
+const origCard = card;
+card = function(t){
+  const c = origCard(t);
+  const badges = c.querySelector('.badges');
+  const sw = c.querySelector('.sw');
+
+  if (!known(t)){
+    // Réglage manuel ou mythe : rien à appliquer, l'interrupteur n'a pas de sens
+    if (sw) sw.remove();
+    return c;
+  }
+
+  const st = STATE[t.id];
+  const b = document.createElement('span');
+  b.className = 'b-state ' + (st === true ? 'b-on' : st === false ? 'b-off' : 'b-unk');
+  b.textContent = st === true ? 'Appliqué' : st === false ? 'Non appliqué' : 'Non vérifiable';
+  badges.insertBefore(b, badges.firstChild);
+
+  c.classList.toggle('applied', st === true);
+  c.classList.remove('armed');
+
+  if (sw){
+    const on = st === true;
+    sw.classList.toggle('on', on);
+    sw.setAttribute('aria-checked', String(on));
+    sw.setAttribute('aria-label', (on ? 'Annuler : ' : 'Appliquer : ') + t.t);
+    sw.onclick = () => { if (!running) applyOne(t, !on); };
+  }
+  return c;
+};
+
+/* ================= TABLEAU DE BORD ================= */
+function renderDash(){
+  const all = scriptable();
+  const on  = all.filter(t => STATE[t.id] === true).length;
+  const safe = all.filter(t => t.v === 'real' || t.v === 'marginal');
+  const todo = safe.filter(t => STATE[t.id] === false).length;
+
+  const tile = (k, v, s) => `<div class="tile"><div class="k">${k}</div><div class="v">${v}${s ? `<small>${s}</small>` : ''}</div></div>`;
+  const m = MACHINE || {};
+
+  document.getElementById('viewDash').innerHTML = `
+    ${ADMIN ? '' : `
+    <div class="admin-warn">
+      <p><b>Mode utilisateur.</b> Deux réglages ne peuvent être ni lus ni appliqués sans les droits administrateur. Relancer en administrateur évite aussi une autorisation Windows à chaque modification.</p>
+      <button class="btn btn-ghost btn-sm" id="btnElevate">Relancer en administrateur</button>
+    </div>`}
+
+    <div class="dash-top">
+      <div class="dash-intro">
+        <span class="chip"><span class="pulse"></span>En direct — budget de latence estimé</span>
+        <h2>Tableau de bord</h2>
+        <p>Chaque milliseconde du clic au pixel, estimée à partir des réglages <b>réellement appliqués</b> sur cette machine — pas une case cochée, un état vérifié.</p>
+      </div>
+      <div class="dash-gauge" id="gaugeSlot"></div>
+    </div>
+
+    <div class="band">
+      <div class="txt">
+        <div class="kicker">Mode compétition</div>
+        <h3>Applique en un clic les réglages sûrs à impact réel</h3>
+        <p>Ne touche jamais aux réglages manuels, ni aux compromis de sécurité (isolation du noyau, atténuations Spectre) : ceux-là restent à ta décision explicite, réglage par réglage.</p>
+        <div class="count"><b>${on}</b> / ${all.length} réglages appliqués${todo ? ` · ${todo} à poser` : ' · rien à poser'}</div>
+      </div>
+      <div class="acts">
+        <button class="btn btn-g" id="dashCompete"${running || !todo ? ' disabled' : ''}>Activer le mode compétition</button>
+        <button class="btn btn-ghost" id="dashRestore"${running || !on ? ' disabled' : ''}>Tout restaurer</button>
+        <span class="sub">${all.filter(t => STATE[t.id] === null).length} non vérifiable(s)</span>
+      </div>
+    </div>
+
+    <div class="tiles">
+      ${tile('Processeur', m.cpu ? m.cpu.trim() : '—', m.cores ? m.cores + ' cœurs / ' + m.threads + ' threads' : '')}
+      ${tile('Mémoire', m.ramGo ? m.ramGo + ' Go' : '—', '')}
+      ${tile('Carte graphique', m.gpu || '—', '')}
+      ${tile('Écran', m.hz ? m.largeur + '×' + m.hauteur : '—', m.hz ? m.hz + ' Hz' : '')}
+      ${tile('Plan d’alimentation', m.planNom || '—', '')}
+      ${tile('Système', m.os ? m.os.replace(/^Microsoft /, '') : '—', m.build ? 'build ' + m.build : '')}
+    </div>`;
+
+  /* La jauge est un nœud persistant : on la ré-insère après chaque rendu du
+     tableau de bord, ce qui préserve ses écouteurs (tilt 3D) et son canvas. */
+  document.getElementById('gaugeSlot').appendChild(gaugeWrap);
+  resizeCanvas();
+
+  const el = document.getElementById('btnElevate');
+  if (el) el.onclick = async () => { el.disabled = true; await RP.elevate(); };
+  document.getElementById('dashCompete').onclick = compete;
+  document.getElementById('dashRestore').onclick = restoreAll;
+}
+
+/* ================= MISES À JOUR =================
+   Le bandeau vit en dehors du tableau de bord : il doit rester visible quelle
+   que soit la vue, et surtout survivre aux reconstructions de renderDash(). */
+const upd = document.createElement('div');
+upd.className = 'upd';
+upd.innerHTML = `
+  <div class="txt">
+    <div class="k" id="updKick">Mise à jour</div>
+    <div class="t" id="updTitle"></div>
+    <div class="d" id="updDesc"></div>
+    <div class="bar" id="updBar"><i></i></div>
+  </div>
+  <div class="acts" id="updActs"></div>`;
+mainEl.insertBefore(upd, mainEl.firstChild.nextSibling);
+
+const updTitle = upd.querySelector('#updTitle');
+const updDesc  = upd.querySelector('#updDesc');
+const updBar   = upd.querySelector('#updBar');
+const updFill  = updBar.querySelector('i');
+const updActs  = upd.querySelector('#updActs');
+const updKick  = upd.querySelector('#updKick');
+
+let myVersion = '';
+const mo = n => (n / 1048576).toFixed(1) + ' Mo';
+
+function updShow(kicker, titre, desc, boutons, progression){
+  updKick.textContent  = kicker;
+  updTitle.textContent = titre;
+  updDesc.textContent  = desc || '';
+  updBar.classList.toggle('show', !!progression);
+  updActs.innerHTML = '';
+  (boutons || []).forEach(b => {
+    const el = document.createElement('button');
+    el.className = 'btn btn-sm ' + (b.fort ? 'btn-g' : 'btn-ghost');
+    el.textContent = b.label;
+    el.onclick = b.action;
+    updActs.appendChild(el);
+  });
+  upd.classList.add('show');
+}
+
+function setVersionLabel(maj){
+  const el = document.getElementById('sbVersion');
+  el.innerHTML = 'Version <b>' + myVersion + '</b>' +
+                 (maj ? ' · <span class="maj">' + maj + ' disponible</span>' : '');
+}
+
+RP.onUpdate(p => {
+  switch (p.evt){
+    case 'checking':
+      break;                                   // silencieux : pas de bruit au démarrage
+
+    case 'available':
+      setVersionLabel(p.version);
+      updShow('Mise à jour disponible', 'Version ' + p.version + ' disponible',
+        'Tu utilises la ' + myVersion + '. Le téléchargement ne démarre pas sans ton accord.',
+        [{ label: 'Télécharger la mise à jour', fort: true, action: () => {
+            updShow('Téléchargement', 'Téléchargement de la version ' + p.version, 'Démarrage…', [], true);
+            RP.updateDownload();
+        }}]);
+      break;
+
+    case 'progress':
+      updFill.style.width = p.percent.toFixed(1) + '%';
+      updDesc.textContent = p.percent.toFixed(0) + ' %  ·  ' + mo(p.transferred) + ' / ' + mo(p.total) +
+                            '  ·  ' + mo(p.bps) + '/s';
+      break;
+
+    case 'ready':
+      updFill.style.width = '100%';
+      updShow('Prêt à installer', 'Version ' + p.version + ' téléchargée',
+        'L’application va se fermer, s’installer en silence, puis se rouvrir seule.',
+        [{ label: 'Redémarrer et installer', fort: true, action: () => RP.updateInstall() },
+         { label: 'Plus tard', action: () => upd.classList.remove('show') }]);
+      break;
+
+    case 'none':
+      upd.classList.remove('show');
+      setVersionLabel(null);
+      break;
+
+    case 'dev':
+      updShow('Développement', 'Vérification des mises à jour indisponible',
+        'L’application n’est pas installée : il n’y a rien à remplacer.', []);
+      break;
+
+    case 'error': {
+      /* electron-updater renvoie une trace d'appel complète : inutilisable
+         telle quelle. On garde la première ligne et on traduit les deux
+         causes courantes en langage compréhensible. */
+      const brut = (p.message || '').split('\n')[0].trim();
+      let lisible;
+      if (/latest\.yml/i.test(brut)){
+        lisible = 'Aucune version compatible n’a encore été publiée. La dernière publication ne contient pas le fichier latest.yml.';
+      } else if (/ENOTFOUND|EAI_AGAIN|ECONNREFUSED|ETIMEDOUT|net::/i.test(brut)){
+        lisible = 'Serveur de mises à jour injoignable. Vérifie ta connexion Internet.';
+      } else {
+        lisible = brut.slice(0, 180) || 'cause inconnue';
+      }
+      updShow('Mise à jour', 'Vérification impossible',
+        lisible + ' L’application fonctionne normalement.',
+        [{ label: 'Réessayer', action: () => RP.updateCheck() },
+         { label: 'Masquer',   action: () => upd.classList.remove('show') }]);
+      break;
+    }
+  }
+});
+
+async function initUpdates(){
+  const v = await RP.version();
+  myVersion = v.version;
+  setVersionLabel(null);
+  RP.updateCheck();
+}
+
+/* ================= LECTURE DE L'ÉTAT ================= */
+async function refresh(){
+  /* Rien ici ne doit pouvoir laisser une fenêtre vide et muette : une lecture
+     qui échoue doit dégrader l'affichage, pas l'empêcher. C'est exactement ce
+     qui est arrivé quand probes.js manquait dans le paquet — écran noir, aucun
+     message, aucune piste. */
+  try {
+    const [st, mach] = await Promise.all([
+      RP.state().catch(e => ({ __err: e && e.message })),
+      MACHINE ? Promise.resolve(MACHINE) : RP.machine().catch(() => null)
+    ]);
+    if (st && !st.__err && st.state){ STATE = st.state; ADMIN = st.admin; }
+    else if (st && st.__err) showError('Lecture de l’état impossible', st.__err);
+    if (mach) MACHINE = mach;
+  } catch (e) {
+    showError('Erreur au démarrage', e && e.message);
+  }
+  buildSide();
+  setView(currentView);
+  renderDash();
+  updateAll();
+}
+
+/* Bandeau d'erreur visible, au-dessus du tableau de bord */
+function showError(titre, detail){
+  let box = document.getElementById('rpError');
+  if (!box){
+    box = document.createElement('div');
+    box.id = 'rpError';
+    box.className = 'admin-warn';
+    box.style.borderColor = 'rgba(255,59,69,.45)';
+    box.style.background  = 'rgba(255,59,69,.08)';
+    mainEl.insertBefore(box, mainEl.firstChild.nextSibling);
+  }
+  box.innerHTML = `<p><b style="color:var(--volt)">${titre}.</b> ${detail || 'cause inconnue'}<br>
+    Les réglages ne peuvent pas être vérifiés sur cette machine. Signale ce message.</p>`;
+}
+
+/* ================= FENÊTRE D'EXÉCUTION ================= */
+const runOvl = document.createElement('div');
+runOvl.className = 'ovl'; runOvl.id = 'ovlRun';
+runOvl.innerHTML = `
+  <div class="modal">
+    <div class="modal-h">
+      <h3 id="runTitle">Application en cours</h3>
+      <button class="btn btn-ghost btn-sm" id="runFolder" hidden>Ouvrir le journal</button>
+      <button class="btn btn-ghost btn-sm" id="runClose" hidden>Fermer</button>
+    </div>
+    <div class="modal-b">
+      <div class="runstate" id="runState"><span class="dot"></span><span id="runMsg">En attente de l’autorisation Windows…</span></div>
+      <div class="runlog mono" id="runLog"></div>
+    </div>
+  </div>`;
+document.body.appendChild(runOvl);
+
+const runState = runOvl.querySelector('#runState');
+const runMsg   = runOvl.querySelector('#runMsg');
+const runLog   = runOvl.querySelector('#runLog');
+const runClose = runOvl.querySelector('#runClose');
+const runFolder= runOvl.querySelector('#runFolder');
+const runTitle = runOvl.querySelector('#runTitle');
+runClose.onclick = () => runOvl.classList.remove('open');
+
+RP.onLog(chunk => {
+  const bas = runLog.scrollTop + runLog.clientHeight >= runLog.scrollHeight - 30;
+  runLog.textContent += chunk;
+  if (bas) runLog.scrollTop = runLog.scrollHeight;
+});
+
+/* ================= APPLICATION =================
+   On réutilise buildScript() du web : c'est le même script, vérifié, avec
+   son point de restauration et son garde-fou « Taper OUI » sur les compromis.
+   On force juste la sélection le temps de le construire. */
+function scriptFor(ids, revert){
+  const saved = new Set(armed);
+  armed.clear(); ids.forEach(i => armed.add(i));
+  const s = buildScript(revert);
+  armed.clear(); saved.forEach(i => armed.add(i));
+  return s;
+}
+
+async function run(title, script, revert, confirmOpts){
+  if (running) return;
+  const ok = await RP.confirm(confirmOpts);
+  if (!ok) return;
+
+  running = true; updateAll();
+  runTitle.textContent = title;
+  runState.className = 'runstate';
+  runMsg.textContent = 'En attente de l’autorisation Windows…';
+  runLog.textContent = '';
+  runClose.hidden = true; runFolder.hidden = true;
+  runOvl.classList.add('open');
+
+  const res = await RP.apply(script, revert);
+  running = false;
+  runClose.hidden = false;
+
+  if (res.cancelled){
+    runState.className = 'runstate fail';
+    runMsg.textContent = 'Annulé — autorisation Windows refusée. Rien n’a été modifié.';
+  } else if (res.ok){
+    runState.className = 'runstate done';
+    runMsg.textContent = 'Terminé — relecture de la machine…';
+  } else {
+    runState.className = 'runstate fail';
+    runMsg.textContent = res.error ? 'Échec : ' + res.error
+                                   : 'Terminé avec des erreurs (code ' + res.code + ') — relis le journal';
+  }
+  if (res.logPath){ runFolder.hidden = false; runFolder.onclick = () => RP.openLog(res.logPath); }
+
+  /* On ne croit pas le script sur parole : on relit la machine. */
+  await refresh();
+  if (res.ok) runMsg.textContent = 'Terminé et vérifié sur la machine';
+}
+
+function applyOne(t, on){
+  return run(
+    (on ? 'Application — ' : 'Annulation — ') + t.t,
+    scriptFor([t.id], !on),
+    !on,
+    {
+      title: on ? 'Appliquer ce réglage' : 'Annuler ce réglage',
+      message: (on ? 'Appliquer « ' : 'Annuler « ') + t.t + ' » sur cette machine ?',
+      detail: on
+        ? (t.v === 'tradeoff'
+            ? 'Ce réglage RÉDUIT la sécurité du système. La console demandera de taper OUI.\n\nUn point de restauration Windows est créé avant modification.'
+            : 'Un point de restauration Windows est créé avant modification.')
+        : 'La commande de retour arrière est la symétrique exacte du réglage.',
+      confirmLabel: on ? 'Appliquer' : 'Annuler le réglage'
+    }
+  );
+}
+
+function compete(){
+  const todo = scriptable().filter(t => (t.v === 'real' || t.v === 'marginal') && STATE[t.id] === false);
+  if (!todo.length){ toast('Tous les réglages sûrs sont déjà en place'); return; }
+  return run(
+    'Mode compétition',
+    scriptFor(todo.map(t => t.id), false),
+    false,
+    {
+      title: 'Activer le mode compétition',
+      message: 'Appliquer ' + todo.length + ' réglage(s) sur cette machine ?',
+      detail: 'Seuls les gains mesurés et les réglages marginaux sont posés. Les compromis de sécurité et les actions manuelles sont exclus.\n\nUn point de restauration Windows est créé avant toute modification.',
+      confirmLabel: 'Appliquer'
+    }
+  );
+}
+
+function restoreAll(){
+  const on = scriptable().filter(t => STATE[t.id] === true);
+  if (!on.length){ toast('Aucun réglage à restaurer'); return; }
+  return run(
+    'Restauration complète',
+    scriptFor(on.map(t => t.id), true),
+    true,
+    {
+      title: 'Tout restaurer',
+      message: 'Annuler ' + on.length + ' réglage(s) sur cette machine ?',
+      detail: 'Chaque commande de retour arrière est la symétrique exacte du réglage appliqué.',
+      confirmLabel: 'Restaurer'
+    }
+  );
+}
+
+document.getElementById('sbCompete').onclick = compete;
+document.getElementById('sbRestore').onclick = restoreAll;
+document.getElementById('sbRefresh').onclick = () => { MACHINE = null; refresh(); };
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && !running) runOvl.classList.remove('open');
+});
+
+refresh();
+initUpdates();
 })();
 </script>
 </body>
