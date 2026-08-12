@@ -34,7 +34,8 @@
       {
         "provider": "github",
         "owner": "tlonchambon95-cpu",
-        "repo": "radical-performance-downloads"
+        "repo": "radical-performance-downloads",
+        "releaseType": "release"
       }
     ],
     "extraResources": [
