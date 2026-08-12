@@ -19,12 +19,18 @@
 const { spawn } = require('child_process');
 const PS = 'powershell.exe';
 
+/* PowerShell écrit sa sortie dans la page de codes Windows, Node la lit en
+   UTF-8 : sans cette ligne, tout accent dans un nom de programme ou de tâche
+   ressort abîmé (« Authenticator App � 2FA »). On force la sortie en UTF-8. */
+const UTF8 = "[Console]::OutputEncoding = [System.Text.Encoding]::UTF8\n";
+
 function run(script){
   return new Promise(resolve => {
     let out = '';
-    const child = spawn(PS, ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-Command', script],
+    const child = spawn(PS, ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-Command', UTF8 + script],
                         { windowsHide: true });
-    child.stdout.on('data', d => out += d.toString());
+    child.stdout.setEncoding('utf8');
+    child.stdout.on('data', d => out += d);
     child.on('error', () => resolve(null));
     child.on('close', () => {
       try { resolve(JSON.parse(out.trim())); } catch { resolve(null); }
@@ -55,6 +61,19 @@ $procs = Get-Process | Group-Object ProcessName | ForEach-Object {
 }
 
 # --- ce qui demarre tout seul ---
+# Windows conserve l'etat active/desactive dans StartupApproved : premier octet
+# a 2 = active, 3 = desactive. C'est exactement ce qu'ecrit le Gestionnaire des
+# taches. On lit la meme source, donc l'application et Windows disent la meme
+# chose, et une desactivation reste visible et annulable depuis Windows.
+function EtatApprouve($ruche, $sousCle, $nom){
+  $p = $ruche + ':\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\StartupApproved\\' + $sousCle
+  $i = Get-Item $p
+  if (-not $i) { return $true }
+  $v = $i.GetValue($nom)
+  if (-not $v) { return $true }
+  return ($v[0] -band 1) -eq 0
+}
+
 $demarrage = New-Object System.Collections.ArrayList
 
 foreach ($k in @(
@@ -66,8 +85,11 @@ foreach ($k in @(
   if (-not $item) { continue }
   foreach ($nom in $item.GetValueNames()){
     if (-not $nom) { continue }
+    $ruche = if ($k.s -eq 'HKCU') { 'HKCU' } else { 'HKLM' }
     [void]$demarrage.Add([pscustomobject]@{
-      nom = $nom; type = 'registre'; source = $k.s; cible = [string]$item.GetValue($nom); actif = $true
+      nom = $nom; type = 'registre'; source = $k.s; cible = [string]$item.GetValue($nom)
+      actif = (EtatApprouve $ruche 'Run' $nom)
+      admin = ($ruche -eq 'HKLM')
     })
   }
 }
@@ -76,18 +98,25 @@ foreach ($d in @([Environment]::GetFolderPath('Startup'), "$env:ProgramData\\Mic
   if (-not (Test-Path $d)) { continue }
   Get-ChildItem $d -File | Where-Object { $_.Extension -ne '.ini' } | ForEach-Object {
     [void]$demarrage.Add([pscustomobject]@{
-      nom = $_.BaseName; type = 'dossier'; source = $d; cible = $_.FullName; actif = $true
+      nom = $_.BaseName; type = 'dossier'; source = $d; cible = $_.FullName
+      actif = (EtatApprouve 'HKCU' 'StartupFolder' $_.Name)
+      cleApprouve = $_.Name
+      admin = $false
     })
   }
 }
 
-# Taches planifiees hors Microsoft, declenchees a l'ouverture de session
+# Taches planifiees hors Microsoft, declenchees a l'ouverture de session.
+# On garde aussi les desactivees : sans elles, une tache coupee disparaitrait
+# de la liste et deviendrait impossible a reactiver depuis l'application.
 Get-ScheduledTask | Where-Object {
-  $_.TaskPath -notlike '\\Microsoft\\*' -and $_.State -ne 'Disabled' -and
+  $_.TaskPath -notlike '\\Microsoft\\*' -and
   ($_.Triggers | Where-Object { $_.CimClass.CimClassName -eq 'MSFT_TaskLogonTrigger' -or $_.CimClass.CimClassName -eq 'MSFT_TaskBootTrigger' })
 } | ForEach-Object {
   [void]$demarrage.Add([pscustomobject]@{
-    nom = $_.TaskName; type = 'tache'; source = $_.TaskPath; cible = $_.TaskPath + $_.TaskName; actif = $true
+    nom = $_.TaskName; type = 'tache'; source = $_.TaskPath; cible = $_.TaskPath + $_.TaskName
+    actif = ($_.State -ne 'Disabled')
+    admin = $true
   })
 }
 

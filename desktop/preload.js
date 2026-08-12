@@ -30,6 +30,9 @@ contextBridge.exposeInMainWorld('RP', {
   /** Carte mère, BIOS, processeur, mémoire (lecture seule). */
   hardware: () => ipcRenderer.invoke('rp:hardware'),
 
+  /** Autorise ou empêche une entrée de démarrer avec Windows. Réversible. */
+  setStartup: (entree, actif) => ipcRenderer.invoke('rp:setStartup', { entree, actif }),
+
   /** Relance l'application en administrateur (ferme l'instance courante). */
   elevate: () => ipcRenderer.invoke('rp:elevate'),
 

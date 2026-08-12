@@ -27,7 +27,7 @@ if (typeof electron === 'string' || !electron.app){
 const { app, BrowserWindow, ipcMain, shell, dialog } = electron;
 const path = require('path');
 const { spawn } = require('child_process');
-const { runElevated, readMachine, readState } = require('./system');
+const { runElevated, readMachine, readState, setStartupEntry, scriptStartup } = require('./system');
 
 /* Une seule instance : deux fenêtres pourraient appliquer des réglages
    concurrents sur la même machine. */
@@ -169,6 +169,27 @@ ipcMain.handle('rp:updateInstall', () => {
 });
 
 const { readProcesses, readHardware } = require('./inventory');
+
+/* Une entrée HKLM ou une tâche planifiée exige l'élévation. Si l'application
+   n'est pas administrateur, on repasse par runElevated : une invite UAC, la
+   console visible, exactement le même chemin que pour les réglages. */
+ipcMain.handle('rp:setStartup', async (e, { entree, actif }) => {
+  if (!entree || typeof entree.nom !== 'string') return { ok: false, error: 'entrée invalide' };
+  try {
+    const direct = await setStartupEntry(entree, actif);
+    if (direct.ok) return direct;
+    if (!entree.admin) return direct;
+    const res = await runElevated(
+      `Write-Host "  ${actif ? 'Reactivation' : 'Desactivation'} au demarrage : ${String(entree.nom).replace(/"/g, '')}"\n` +
+      scriptStartup(entree, actif) +
+      `\nWrite-Host "  Termine." -ForegroundColor Green`,
+      chunk => { if (win && !win.isDestroyed()) win.webContents.send('rp:log', chunk); }
+    );
+    return { ok: !res.cancelled && res.code === 0, cancelled: res.cancelled, code: res.code };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+});
 ipcMain.handle('rp:processes', async () => { try { return await readProcesses(); } catch (e) { return { __err: e && e.message }; } });
 ipcMain.handle('rp:hardware',  async () => { try { return await readHardware();  } catch (e) { return { __err: e && e.message }; } });
 

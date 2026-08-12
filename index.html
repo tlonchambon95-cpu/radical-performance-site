@@ -839,7 +839,7 @@ footer p{font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.1em;text-
       </ul>
       <a class="btn btn-g" href="https://github.com/tlonchambon95-cpu/radical-performance-downloads/releases/latest/download/RadicalPerformance-Setup.exe">Télécharger — 95 Mo</a>
       <span class="dl-note">
-        Windows 10/11 64 bits · version 2.5.0<br>
+        Windows 10/11 64 bits · version 2.6.0<br>
         <b>Application non signée</b> — Windows affichera « Windows a protégé votre PC » :
         cliquer sur « Informations complémentaires » puis « Exécuter quand même ».
       </span>
@@ -2520,12 +2520,18 @@ function renderProcessus(){
         Descendre le compteur en coupant des composants système est documenté comme sans gain et source d'instabilité.</p>
     </div>
 
-    <div class="sous-titre">Lancé automatiquement au démarrage — ${dem.length} entrée${dem.length > 1 ? 's' : ''}</div>
+    <div class="sous-titre">Lancé automatiquement au démarrage — ${dem.filter(d => d.actif).length} actif${dem.filter(d => d.actif).length > 1 ? 's' : ''} sur ${dem.length}</div>
+    <p style="font-size:12.5px;color:var(--muted);margin:-4px 0 12px;line-height:1.55">
+      Couper une entrée l'empêche de se lancer avec Windows, sans rien supprimer.
+      Le changement passe par le mécanisme natif de Windows : il apparaît aussi dans
+      le Gestionnaire des tâches, et s'annule d'un clic ici ou là-bas.</p>
     <div class="liste">
-      ${dem.length ? dem.map(d => `
-        <div class="ligne">
+      ${dem.length ? dem.map((d, i) => `
+        <div class="ligne" data-dem="${i}">
           <div class="nom"><b>${esc(d.nom)}</b><small>${esc(d.cible || '')}</small></div>
-          <div class="val">${d.type}</div>
+          <div class="val">${d.type}${d.admin ? '<br><span style="color:var(--tradeoff)">admin requis</span>' : ''}</div>
+          <button class="sw ${d.actif ? 'on' : ''}" role="switch" aria-checked="${d.actif}"
+                  aria-label="${d.actif ? 'Empêcher' : 'Autoriser'} le démarrage de ${esc(d.nom)}"></button>
         </div>`).join('') : '<div class="ligne"><div class="nom"><b>Aucune entrée</b><small>Rien ne se lance automatiquement.</small></div></div>'}
     </div>
 
@@ -2534,6 +2540,29 @@ function renderProcessus(){
 
     <div class="sous-titre">Composants Windows — ${sys.length} groupe${sys.length > 1 ? 's' : ''}</div>
     <div class="liste">${sys.slice(0, 15).map(p => ligne(p, 'sys')).join('')}</div>`;
+
+  /* Un interrupteur par entrée, chacun traité séparément — jamais de lot. */
+  v.querySelectorAll('.ligne[data-dem] .sw').forEach(sw => {
+    sw.onclick = async () => {
+      if (running) return;
+      const d = dem[+sw.closest('.ligne').dataset.dem];
+      const versActif = !d.actif;
+      sw.disabled = true;
+      const res = await RP.setStartup(d, versActif);
+      sw.disabled = false;
+      if (res && res.ok){
+        d.actif = versActif;
+        sw.classList.toggle('on', versActif);
+        sw.setAttribute('aria-checked', String(versActif));
+        toast(versActif ? d.nom + ' se lancera au démarrage' : d.nom + ' ne se lancera plus au démarrage');
+        renderProcessus();
+      } else if (res && res.cancelled){
+        toast('Annulé — autorisation Windows refusée');
+      } else {
+        toast('Échec : ' + ((res && res.error) || 'raison inconnue'));
+      }
+    };
+  });
 }
 
 /* ================= MODULE BIOS =================

@@ -21,6 +21,9 @@ const os   = require('os');
 const path = require('path');
 
 const PS = 'powershell.exe';
+/* Force la sortie PowerShell en UTF-8 : sans ça, tout accent renvoyé par une
+   requête système ressort abîmé côté Node, qui décode en UTF-8. */
+const UTF8 = "[Console]::OutputEncoding = [System.Text.Encoding]::UTF8\n";
 /* 1223 = ERROR_CANCELLED : l'utilisateur a refusé l'invite UAC */
 const USER_CANCELLED = 1223;
 
@@ -145,9 +148,10 @@ function readState(){
   const { buildProbeScript } = require('./probes');
   return new Promise(resolve => {
     let out = '';
-    const child = spawn(PS, ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-Command', buildProbeScript()],
+    const child = spawn(PS, ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-Command', UTF8 + buildProbeScript()],
                         { windowsHide: true });
-    child.stdout.on('data', d => out += d.toString());
+    child.stdout.setEncoding('utf8');
+    child.stdout.on('data', d => out += d);
     child.on('error', () => resolve(null));
     child.on('close', () => {
       try {
@@ -163,9 +167,10 @@ function readState(){
 function readMachine(){
   return new Promise(resolve => {
     let out = '';
-    const child = spawn(PS, ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-Command', PROBE],
+    const child = spawn(PS, ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-Command', UTF8 + PROBE],
                         { windowsHide: true });
-    child.stdout.on('data', d => out += d.toString());
+    child.stdout.setEncoding('utf8');
+    child.stdout.on('data', d => out += d);
     child.on('error', () => resolve(null));
     child.on('close', () => {
       try { resolve(JSON.parse(out.trim())); }
@@ -174,4 +179,61 @@ function readMachine(){
   });
 }
 
-module.exports = { runElevated, readMachine, readState, USER_CANCELLED };
+/* ---------------------------------------------------------------------
+   Activer / désactiver une entrée de démarrage automatique.
+
+   On écrit dans StartupApproved, le mécanisme natif de Windows — celui
+   qu'utilise le Gestionnaire des tâches. Conséquences voulues :
+     - l'entrée d'origine n'est jamais touchée, donc rien n'est détruit
+     - le changement est visible dans le Gestionnaire des tâches
+     - il s'annule depuis Windows aussi bien que depuis l'application
+   Réinventer un stockage maison aurait produit un état invisible pour
+   l'utilisateur et incohérent avec ce que Windows affiche.
+   --------------------------------------------------------------------- */
+function scriptStartup(entree, actif){
+  const nom = String(entree.nom).replace(/'/g, "''");
+  const octet = actif ? 2 : 3;
+
+  if (entree.type === 'tache'){
+    const chemin = String(entree.source).replace(/'/g, "''");
+    return actif
+      ? `Enable-ScheduledTask  -TaskPath '${chemin}' -TaskName '${nom}' -ErrorAction Stop | Out-Null`
+      : `Disable-ScheduledTask -TaskPath '${chemin}' -TaskName '${nom}' -ErrorAction Stop | Out-Null`;
+  }
+
+  const ruche  = entree.source === 'HKCU' ? 'HKCU' : 'HKLM';
+  const sousCle = entree.type === 'dossier' ? 'StartupFolder' : 'Run';
+  const cle = entree.type === 'dossier' ? 'HKCU' : ruche;
+  const valeur = entree.type === 'dossier'
+    ? String(entree.cleApprouve || entree.nom).replace(/'/g, "''")
+    : nom;
+
+  return `
+$p = '${cle}:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\StartupApproved\\${sousCle}'
+if (-not (Test-Path $p)) { New-Item -Path $p -Force | Out-Null }
+$b = New-Object byte[] 12
+$b[0] = ${octet}
+Set-ItemProperty -Path $p -Name '${valeur}' -Value $b -Type Binary -ErrorAction Stop`;
+}
+
+/**
+ * @param {object} entree  une entrée renvoyée par readProcesses().demarrage
+ * @param {boolean} actif  true = laisser démarrer, false = empêcher
+ */
+function setStartupEntry(entree, actif){
+  const script = scriptStartup(entree, actif);
+  return new Promise(resolve => {
+    let err = '';
+    const child = spawn(PS, ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-Command', UTF8 + script],
+                        { windowsHide: true });
+    child.stderr.on('data', d => err += d.toString());
+    child.on('error', e => resolve({ ok: false, error: e.message }));
+    child.on('close', code => resolve({
+      ok: code === 0,
+      code,
+      error: code === 0 ? null : (err.trim().split('\n')[0] || 'code ' + code)
+    }));
+  });
+}
+
+module.exports = { runElevated, readMachine, readState, setStartupEntry, scriptStartup, USER_CANCELLED };
