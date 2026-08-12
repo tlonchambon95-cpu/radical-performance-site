@@ -1,3 +1,15 @@
+# Dépendances et sorties de construction — jamais versionnées.
+# desktop/dist contient un installeur de 95 Mo : il est publié en tant
+# qu'artefact de release, pas dans le dépôt.
+desktop/node_modules/
+desktop/dist/
+desktop/*.bak
+desktop/package.json.*
+
+# Dossiers de travail de la migration Netlify -> GitHub Pages
+_deploiement-netlify/
+_sauvegarde-site-netlify/
+
 # Système
 Thumbs.db
 desktop.ini

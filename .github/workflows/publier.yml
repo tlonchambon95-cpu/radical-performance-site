@@ -1,0 +1,87 @@
+# =====================================================================
+#  Publication automatique de Radical Performance
+#  -------------------------------------------------------------------
+#  Déclenché en poussant une étiquette de version : git tag v2.3.0 && git push --tags
+#
+#  Ce workflow fait, sur les machines de GitHub, ce qui se faisait à la main :
+#    1. vérifie que l'étiquette correspond bien à la version du paquet
+#    2. lance check.js (mêmes contrôles qu'en local)
+#    3. construit l'installeur Windows
+#    4. crée la publication et y joint les TROIS fichiers attendus par
+#       electron-updater : l'installeur, latest.yml et le .blockmap
+#
+#  Le site, lui, se met à jour tout seul : GitHub Pages republie à chaque
+#  push sur main, sans intervention de ce workflow.
+#
+#  IMPORTANT — les publications vont dans radical-performance-downloads,
+#  et non dans ce dépôt. C'est imposé : les applications déjà installées
+#  chez les clients interrogent cette adresse, gravée dans leur binaire.
+#  La changer les couperait définitivement des mises à jour.
+#  Cela nécessite un jeton d'accès personnel dans le secret RELEASE_TOKEN
+#  (le jeton fourni par défaut ne peut écrire que dans ce dépôt-ci).
+# =====================================================================
+name: Publier une version
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:          # permet aussi un lancement manuel depuis l'onglet Actions
+
+permissions:
+  contents: read
+
+jobs:
+  publier:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Vérifier que l'étiquette correspond à la version du paquet
+        shell: pwsh
+        run: |
+          $pkg = (Get-Content desktop/package.json -Raw | ConvertFrom-Json).version
+          $tag = "${{ github.ref_name }}" -replace '^v', ''
+          Write-Host "paquet=$pkg  etiquette=$tag"
+          if ($tag -and $pkg -ne $tag) {
+            Write-Error "L'etiquette v$tag ne correspond pas a la version $pkg de desktop/package.json."
+            exit 1
+          }
+
+      - name: Installer les dépendances
+        working-directory: desktop
+        run: npm ci --no-audit --no-fund
+
+      - name: Contrôles d'intégrité
+        run: node check.js
+
+      - name: Construire l'installeur
+        working-directory: desktop
+        run: npm run dist
+
+      - name: Vérifier les trois fichiers de publication
+        shell: pwsh
+        run: |
+          $manque = @()
+          foreach ($f in 'RadicalPerformance-Setup.exe','latest.yml','RadicalPerformance-Setup.exe.blockmap') {
+            if (-not (Test-Path "desktop/dist/$f")) { $manque += $f }
+          }
+          if ($manque.Count) { Write-Error ("Fichiers absents : " + ($manque -join ', ')); exit 1 }
+          Get-ChildItem desktop/dist -File | Where-Object { $_.Name -match 'Setup\.exe$|latest\.yml$|blockmap$' } |
+            ForEach-Object { "{0,-42} {1} Mo" -f $_.Name, [math]::Round($_.Length/1MB, 1) }
+
+      - name: Publier sur radical-performance-downloads
+        uses: softprops/action-gh-release@v2
+        with:
+          repository: tlonchambon95-cpu/radical-performance-downloads
+          token: ${{ secrets.RELEASE_TOKEN }}
+          tag_name: ${{ github.ref_name }}
+          name: Radical Performance ${{ github.ref_name }}
+          generate_release_notes: true
+          files: |
+            desktop/dist/RadicalPerformance-Setup.exe
+            desktop/dist/latest.yml
+            desktop/dist/RadicalPerformance-Setup.exe.blockmap

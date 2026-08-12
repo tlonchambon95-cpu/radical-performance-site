@@ -1,0 +1,65 @@
+{
+  "name": "radical-performance-desktop",
+  "productName": "Radical Performance",
+  "version": "2.3.0",
+  "description": "Console d'optimisation esport — application de bureau. Un outil WestLab.",
+  "author": "WestLab",
+  "license": "UNLICENSED",
+  "private": true,
+  "main": "main.js",
+  "scripts": {
+    "start": "set ELECTRON_RUN_AS_NODE=&& electron .",
+    "dist": "electron-builder --win nsis"
+  },
+  "devDependencies": {
+    "electron": "^43.3.0",
+    "electron-builder": "^26.15.3"
+  },
+  "build": {
+    "appId": "com.westlab.radicalperformance",
+    "productName": "Radical Performance",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "system.js",
+      "probes.js",
+      "package.json",
+      "node_modules/**/*"
+    ],
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "tlonchambon95-cpu",
+        "repo": "radical-performance-downloads"
+      }
+    ],
+    "extraResources": [
+      {
+        "from": "../index.html",
+        "to": "ui/index.html"
+      }
+    ],
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "icon": "build/icon.ico",
+      "artifactName": "RadicalPerformance-Setup.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Radical Performance"
+    }
+  },
+  "dependencies": {
+    "electron-updater": "^6.8.9"
+  }
+}
