@@ -120,8 +120,13 @@ Get-ScheduledTask | Where-Object {
   })
 }
 
+# Nombre d'hotes de services : c'est presque toujours le gros du compteur,
+# et ce sont eux qu'on ne peut pas fermer sans arreter des services Windows.
+$svchost = @(Get-Process -Name svchost -ErrorAction SilentlyContinue).Count
+
 [pscustomobject]@{
   total     = (Get-Process).Count
+  svchost   = $svchost
   procs     = @($procs)
   demarrage = @($demarrage)
 } | ConvertTo-Json -Depth 4 -Compress

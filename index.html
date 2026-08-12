@@ -839,7 +839,7 @@ footer p{font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.1em;text-
       </ul>
       <a class="btn btn-g" href="https://github.com/tlonchambon95-cpu/radical-performance-downloads/releases/latest/download/RadicalPerformance-Setup.exe">Télécharger — 95 Mo</a>
       <span class="dl-note">
-        Windows 10/11 64 bits · version 2.6.0<br>
+        Windows 10/11 64 bits · version 2.7.0<br>
         <b>Application non signée</b> — Windows affichera « Windows a protégé votre PC » :
         cliquer sur « Informations complémentaires » puis « Exécuter quand même ».
       </span>
@@ -2515,9 +2515,26 @@ function renderProcessus(){
         <div class="gros">${dem.length}</div>
       </div>
       <p class="note"><b>Ce compteur est indicatif, pas une mesure de performance.</b>
-        Un Windows 11 sain tourne entre 150 et 250 processus, et un processus endormi ne consomme rien.
-        Le chiffre qui compte est celui du milieu : le temps CPU réellement pris par les applications tierces.
-        Descendre le compteur en coupant des composants système est documenté comme sans gain et source d'instabilité.</p>
+        Un processus endormi ne consomme rien : le chiffre qui compte est celui du milieu,
+        le temps CPU réellement pris par les applications tierces.
+        ${PROCS.svchost ? `Sur cette machine, <b>${PROCS.svchost} processus sont des <code>svchost.exe</code></b>,
+        l'hôte de services de Windows — ils ne peuvent pas être fermés sans arrêter des services système.` : ''}</p>
+    </div>
+
+    <div class="band" style="margin-top:16px">
+      <div class="txt">
+        <div class="kicker">Mode match</div>
+        <h3>Fermer toutes les applications tierces en un clic</h3>
+        <p>Ferme d'un coup tout ce qui tourne hors de Windows : navigateurs, éditeurs, messageries, lanceurs.
+           Chaque application est d'abord invitée à se fermer proprement — un éditeur peut donc proposer
+           d'enregistrer — et n'est forcée qu'ensuite. Les services et processus système ne sont jamais touchés.</p>
+        <div class="count" id="matchCount">Analyse…</div>
+      </div>
+      <div class="acts">
+        <button class="btn btn-g" id="btnMatch">Activer le mode match</button>
+        <button class="btn btn-ghost" id="btnCoupeTout">Couper tout le démarrage</button>
+        <span class="sub">Rien n'est désinstallé — tu rouvres ce que tu veux ensuite</span>
+      </div>
     </div>
 
     <div class="sous-titre">Lancé automatiquement au démarrage — ${dem.filter(d => d.actif).length} actif${dem.filter(d => d.actif).length > 1 ? 's' : ''} sur ${dem.length}</div>
@@ -2540,6 +2557,59 @@ function renderProcessus(){
 
     <div class="sous-titre">Composants Windows — ${sys.length} groupe${sys.length > 1 ? 's' : ''}</div>
     <div class="liste">${sys.slice(0, 15).map(p => ligne(p, 'sys')).join('')}</div>`;
+
+  /* ---- Mode match : le bouton généralisé ---- */
+  (async () => {
+    const l = await RP.listApps();
+    const el = document.getElementById('matchCount');
+    if (!el) return;
+    if (!l || l.__err){ el.textContent = 'Analyse impossible'; return; }
+    const n = (l.cibles || []).reduce((a, c) => a + c.n, 0);
+    const mo = (l.cibles || []).reduce((a, c) => a + c.mo, 0);
+    el.innerHTML = `<b>${n}</b> processus fermés · <b>${(mo / 1024).toFixed(1)}</b> Go libérés ·
+                    il restera <b>${l.restera}</b> processus système`;
+
+    document.getElementById('btnMatch').onclick = async () => {
+      const liste = (l.cibles || []).slice(0, 14).map(c => `  ${c.nom}${c.n > 1 ? ' ×' + c.n : ''}  (${c.mo} Mo)`).join('\n');
+      const ok = await RP.confirm({
+        title: 'Activer le mode match',
+        message: `Fermer ${n} processus appartenant à ${(l.cibles || []).length} applications ?`,
+        detail: `Chaque application est d'abord invitée à se fermer proprement : enregistre ton travail en cours si une fenêtre te le propose.\n\n${liste}${(l.cibles || []).length > 14 ? '\n  …' : ''}\n\nIl restera ${l.restera} processus, tous appartenant à Windows.`,
+        confirmLabel: 'Fermer ces applications'
+      });
+      if (!ok) return;
+      toast('Fermeture en cours…');
+      const r = await RP.closeApps();
+      if (r && !r.__err){
+        toast(`${r.avant} → ${r.apres} processus`);
+        await chargerInventaire();
+        renderProcessus();
+      } else {
+        toast('Échec : ' + ((r && r.__err) || 'raison inconnue'));
+      }
+    };
+  })();
+
+  /* ---- Couper toutes les entrées de démarrage d'un coup ---- */
+  document.getElementById('btnCoupeTout').onclick = async () => {
+    const actifs = dem.filter(d => d.actif);
+    if (!actifs.length){ toast('Tout est déjà coupé'); return; }
+    const ok = await RP.confirm({
+      title: 'Couper tout le démarrage',
+      message: `Empêcher ${actifs.length} programme(s) de se lancer avec Windows ?`,
+      detail: actifs.map(d => '  ' + d.nom).join('\n') +
+              '\n\nRien n\'est désinstallé : chaque entrée reste listée et se réactive d\'un clic, ici ou dans le Gestionnaire des tâches.',
+      confirmLabel: 'Tout couper'
+    });
+    if (!ok) return;
+    let n = 0;
+    for (const d of actifs){
+      const r = await RP.setStartup(d, false);
+      if (r && r.ok){ d.actif = false; n++; }
+    }
+    toast(n + ' entrée(s) coupée(s) sur ' + actifs.length);
+    renderProcessus();
+  };
 
   /* Un interrupteur par entrée, chacun traité séparément — jamais de lot. */
   v.querySelectorAll('.ligne[data-dem] .sw').forEach(sw => {

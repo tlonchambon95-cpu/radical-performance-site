@@ -33,6 +33,12 @@ contextBridge.exposeInMainWorld('RP', {
   /** Autorise ou empêche une entrée de démarrer avec Windows. Réversible. */
   setStartup: (entree, actif) => ipcRenderer.invoke('rp:setStartup', { entree, actif }),
 
+  /** Liste ce que le mode match fermerait, sans rien fermer. */
+  listApps: () => ipcRenderer.invoke('rp:listApps'),
+
+  /** Ferme les applications tierces. Poliment d'abord, en forçant ensuite. */
+  closeApps: () => ipcRenderer.invoke('rp:closeApps'),
+
   /** Relance l'application en administrateur (ferme l'instance courante). */
   elevate: () => ipcRenderer.invoke('rp:elevate'),
 

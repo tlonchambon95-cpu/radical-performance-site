@@ -27,7 +27,8 @@ if (typeof electron === 'string' || !electron.app){
 const { app, BrowserWindow, ipcMain, shell, dialog } = electron;
 const path = require('path');
 const { spawn } = require('child_process');
-const { runElevated, readMachine, readState, setStartupEntry, scriptStartup } = require('./system');
+const { runElevated, readMachine, readState, setStartupEntry, scriptStartup,
+        listApps, closeApps } = require('./system');
 
 /* Une seule instance : deux fenêtres pourraient appliquer des réglages
    concurrents sur la même machine. */
@@ -169,6 +170,9 @@ ipcMain.handle('rp:updateInstall', () => {
 });
 
 const { readProcesses, readHardware } = require('./inventory');
+
+ipcMain.handle('rp:listApps',  async () => { try { return await listApps();  } catch (e) { return { __err: e.message }; } });
+ipcMain.handle('rp:closeApps', async () => { try { return await closeApps(); } catch (e) { return { __err: e.message }; } });
 
 /* Une entrée HKLM ou une tâche planifiée exige l'élévation. Si l'application
    n'est pas administrateur, on repasse par runElevated : une invite UAC, la

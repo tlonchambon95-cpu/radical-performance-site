@@ -236,4 +236,102 @@ function setStartupEntry(entree, actif){
   });
 }
 
-module.exports = { runElevated, readMachine, readState, setStartupEntry, scriptStartup, USER_CANCELLED };
+/* ---------------------------------------------------------------------
+   Mode match : ferme en un geste les applications tierces.
+
+   Portée volontairement limitée aux processus qui ont un chemin lisible
+   HORS de C:\Windows. Conséquence : les services et les processus système
+   sont exclus par construction, pas par une liste qu'on pourrait oublier
+   de tenir à jour. C'est ce qui rend l'opération sûre.
+
+   Fermeture en deux temps : on demande d'abord poliment (CloseMainWindow),
+   ce qui laisse un éditeur proposer d'enregistrer ; on ne force qu'après
+   un délai, et seulement pour ce qui n'a pas obéi.
+   --------------------------------------------------------------------- */
+const PROTEGES = [
+  'Radical Performance',        // l'application elle-même
+  'explorer',                   // le bureau et la barre des tâches
+  'MsMpEng', 'SecurityHealth', 'SecurityHealthSystray', 'NisSrv',   // sécurité
+  'audiodg', 'RtkAudUService', 'RAVCpl64', 'RtkNGUI64',             // audio
+  'NVDisplay.Container', 'nvcontainer', 'nvsphelper64',             // pilote GPU
+  'atieclxx', 'amdow', 'RadeonSoftware',
+  'LGHUB', 'lghub_agent', 'RzSynapse', 'Razer Synapse Service',     // souris/clavier
+  'iCUE', 'SteelSeriesGG', 'wootility'
+];
+
+function scriptCloseApps(){
+  const liste = PROTEGES.map(p => `'${p.replace(/'/g, "''")}'`).join(',');
+  return `
+$proteges = @(${liste})
+$win = $env:SystemRoot
+$moi = $PID
+
+$cibles = Get-Process | Where-Object {
+  $_.Path -and
+  -not $_.Path.StartsWith($win, 'OrdinalIgnoreCase') -and
+  $proteges -notcontains $_.ProcessName -and
+  $_.Id -ne $moi
+}
+
+$avant = (Get-Process).Count
+$noms  = @($cibles | Select-Object -ExpandProperty ProcessName -Unique)
+
+# 1. demande polie : laisse les applications enregistrer leur travail
+foreach ($p in $cibles) { try { $null = $p.CloseMainWindow() } catch {} }
+Start-Sleep -Seconds 4
+
+# 2. ce qui n'a pas obei est arrete
+$restants = Get-Process -Id ($cibles.Id) -ErrorAction SilentlyContinue
+$forces = @()
+foreach ($p in $restants) {
+  try { Stop-Process -Id $p.Id -Force -ErrorAction Stop; $forces += $p.ProcessName } catch {}
+}
+Start-Sleep -Seconds 2
+
+[pscustomobject]@{
+  avant   = $avant
+  apres   = (Get-Process).Count
+  fermees = $noms
+  forcees = @($forces | Select-Object -Unique)
+} | ConvertTo-Json -Compress`;
+}
+
+/** Liste ce que le mode match fermerait, sans rien fermer. */
+function scriptListApps(){
+  const liste = PROTEGES.map(p => `'${p.replace(/'/g, "''")}'`).join(',');
+  return `
+$proteges = @(${liste})
+$win = $env:SystemRoot
+$c = Get-Process | Where-Object {
+  $_.Path -and -not $_.Path.StartsWith($win, 'OrdinalIgnoreCase') -and
+  $proteges -notcontains $_.ProcessName -and $_.Id -ne $PID
+}
+[pscustomobject]@{
+  total   = (Get-Process).Count
+  cibles  = @($c | Group-Object ProcessName | ForEach-Object {
+              [pscustomobject]@{ nom = $_.Name; n = $_.Count
+                mo = [math]::Round((($_.Group | Measure-Object WorkingSet64 -Sum).Sum)/1MB) } } |
+            Sort-Object mo -Descending)
+  restera = (Get-Process).Count - @($c).Count
+} | ConvertTo-Json -Depth 3 -Compress`;
+}
+
+function psJson(script){
+  return new Promise(resolve => {
+    let out = '';
+    const child = spawn(PS, ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-Command', UTF8 + script],
+                        { windowsHide: true });
+    child.stdout.setEncoding('utf8');
+    child.stdout.on('data', d => out += d);
+    child.on('error', () => resolve(null));
+    child.on('close', () => { try { resolve(JSON.parse(out.trim())); } catch { resolve(null); } });
+  });
+}
+
+const listApps  = () => psJson(scriptListApps());
+const closeApps = () => psJson(scriptCloseApps());
+
+module.exports = {
+  runElevated, readMachine, readState, setStartupEntry, scriptStartup,
+  listApps, closeApps, USER_CANCELLED
+};
