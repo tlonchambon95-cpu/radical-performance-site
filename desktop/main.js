@@ -219,6 +219,9 @@ ipcMain.handle('rp:applyServices', async (e, { ids, restaurer }) => {
   return { ok: !res.cancelled && res.code === 0, cancelled: res.cancelled, code: res.code, logPath: res.logPath };
 });
 
+const { readDiagnostic } = require('./diagnostic');
+ipcMain.handle('rp:diagnostic', async () => { try { return await readDiagnostic(); } catch (e) { return { __err: e.message }; } });
+
 const { readPing } = require('./network');
 ipcMain.handle('rp:ping', async () => { try { return await readPing(); } catch (e) { return { __err: e.message }; } });
 

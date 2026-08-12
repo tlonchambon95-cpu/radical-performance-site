@@ -839,7 +839,7 @@ footer p{font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.1em;text-
       </ul>
       <a class="btn btn-g" href="https://github.com/tlonchambon95-cpu/radical-performance-downloads/releases/latest/download/RadicalPerformance-Setup.exe">Télécharger — 95 Mo</a>
       <span class="dl-note">
-        Windows 10/11 64 bits · version 3.4.0<br>
+        Windows 10/11 64 bits · version 3.5.0<br>
         <b>Application non signée</b> — Windows affichera « Windows a protégé votre PC » :
         cliquer sur « Informations complémentaires » puis « Exécuter quand même ».
       </span>
@@ -2142,6 +2142,7 @@ shell.innerHTML = `
     <div id="sideModules"></div>
     <div class="side-sec">Système</div>
     <button class="side-item" data-view="proc"><span class="lbl">Processus</span><span class="cnt" id="cntProc"></span></button>
+    <button class="side-item" data-view="diag"><span class="lbl">Diagnostic matériel</span><span class="cnt" id="cntDiag"></span></button>
     <button class="side-item" data-view="bios"><span class="lbl">BIOS</span></button>
     <button class="side-item" data-view="rapport"><span class="lbl">Avant / après</span><span class="cnt" id="cntRepere"></span></button>
     <button class="side-item" data-view="method"><span class="lbl">Méthode &amp; honnêteté</span></button>
@@ -2150,6 +2151,7 @@ shell.innerHTML = `
     <div class="view on" id="viewDash"></div>
     <div class="view" id="viewModule"></div>
     <div class="view" id="viewProc"></div>
+    <div class="view" id="viewDiag"></div>
     <div class="view" id="viewBios"></div>
     <div class="view" id="viewRapport"></div>
     <div class="view" id="viewMethod"></div>
@@ -2254,7 +2256,8 @@ function buildSide(){
   });
 }
 
-const VUES_FIXES = { dash: 'viewDash', method: 'viewMethod', proc: 'viewProc', bios: 'viewBios', rapport: 'viewRapport' };
+const VUES_FIXES = { dash: 'viewDash', method: 'viewMethod', proc: 'viewProc',
+                     diag: 'viewDiag', bios: 'viewBios', rapport: 'viewRapport' };
 
 function setView(v){
   currentView = v;
@@ -2268,6 +2271,7 @@ function setView(v){
     renderModule();
   }
   if (v === 'proc') renderProcessus();
+  if (v === 'diag') renderDiagnostic();
   if (v === 'bios') renderBios();
   if (v === 'rapport') renderRapport();
   /* Les canvas ne tournent que sur le tableau de bord — inutile de consommer
@@ -2882,6 +2886,64 @@ function renderProcessus(){
   });
 }
 
+/* ================= DIAGNOSTIC MATÉRIEL =================
+   Ce que l'outil ne peut PAS corriger, et qui pèse plus lourd que ce qu'il
+   corrige. Un client en simple canal perd 10 à 15 % de FPS : aucun des 51
+   réglages n'approche ça. Lui dire la vérité — même quand elle consiste à
+   lui conseiller d'acheter quelque chose — est ce qui distingue un
+   diagnostic d'un argumentaire. */
+let DIAG = null;
+
+async function chargerDiagnostic(){
+  DIAG = await RP.diagnostic().catch(e => ({ __err: e && e.message }));
+  const n = DIAG && DIAG.constats ? DIAG.constats.filter(c => c.verdict === 'probleme').length : 0;
+  const c = document.getElementById('cntDiag');
+  if (c){ c.textContent = n || ''; c.classList.toggle('full', false); }
+  if (currentView === 'diag') renderDiagnostic();
+}
+
+function renderDiagnostic(){
+  const v = document.getElementById('viewDiag');
+  if (!DIAG){ v.innerHTML = '<div class="dash-intro"><h2>Diagnostic matériel</h2><p>Analyse en cours…</p></div>'; return; }
+  if (DIAG.__err){ v.innerHTML = '<div class="dash-intro"><h2>Diagnostic matériel</h2><p>Analyse impossible : ' + esc(DIAG.__err) + '</p></div>'; return; }
+
+  const ordre = { probleme: 0, attention: 1, ok: 2 };
+  const liste = [...DIAG.constats].sort((a, b) => ordre[a.verdict] - ordre[b.verdict]);
+  const pb = liste.filter(c => c.verdict === 'probleme');
+  const badge = { probleme: 'b-real', attention: 'b-tradeoff', ok: 'b-marginal' };
+  const mot   = { probleme: 'Perte mesurable', attention: 'À vérifier', ok: 'Rien à signaler' };
+
+  v.innerHTML = `
+    <div class="dash-intro" style="margin-bottom:22px">
+      <span class="chip"><span class="pulse"></span>Diagnostic matériel</span>
+      <h2>Ce que le logiciel ne peut pas corriger</h2>
+      <p>Ces points ne se règlent pas depuis Windows — mais ils pèsent souvent plus lourd que
+         l'ensemble des 51 réglages. Les ignorer pour ne montrer que ce qu'on sait faire serait
+         malhonnête envers le client.</p>
+    </div>
+
+    <div class="compteur">
+      <div><div class="lbl">Points à corriger</div><div class="gros">${pb.length}</div></div>
+      <div><div class="lbl">Points vérifiés</div><div class="gros">${liste.length}</div></div>
+      <p class="note">${pb.length
+        ? 'Chaque point ci-dessous indique ce qu\'il coûte et ce qu\'il faut faire. Traiter ceux-là avant d\'ajouter le moindre réglage logiciel.'
+        : 'Aucun goulot matériel détecté. Les réglages logiciels sont alors le levier restant.'}</p>
+    </div>
+
+    ${liste.map(c => `
+      <div class="bios-reg${c.verdict === 'ok' ? ' hs' : ''}">
+        <h4>${esc(c.titre)} <span class="badge ${badge[c.verdict]}">${mot[c.verdict]}</span></h4>
+        <p class="why">${esc(c.constat)}</p>
+        ${c.cout   ? `<p class="why"><b>Ce que ça coûte :</b> ${esc(c.cout)}</p>` : ''}
+        ${c.action ? `<div class="chemins"><div class="chemin"><b>À faire</b><span>${esc(c.action)}</span></div></div>` : ''}
+      </div>`).join('')}
+
+    <p style="font-size:12.5px;color:var(--dim);margin-top:18px;line-height:1.6">
+      Analyse en lecture seule : rien n'a été modifié. Les constats marqués « rien à signaler »
+      sont affichés volontairement — savoir ce qui a été vérifié et jugé sain vaut autant que
+      la liste des problèmes.</p>`;
+}
+
 /* ================= MODULE BIOS =================
    Les libellés diffèrent d'un constructeur à l'autre pour un même réglage :
    d'où la table par marque. Les chemins sont indicatifs — ils bougent d'un
@@ -3301,6 +3363,17 @@ ${h.ramVitesse && h.ramVitesseNom && h.ramVitesseNom < h.ramVitesse ? `<div clas
 ${e(h.ramVitesseNom)} MT/s : le profil XMP/EXPO n'est pas actif. Ce réglage se fait au BIOS, aucun
 logiciel ne peut l'appliquer.</div>` : ''}
 
+${DIAG && DIAG.constats && DIAG.constats.some(c => c.verdict === 'probleme') ? `
+<h2>Goulots matériels — ${DIAG.constats.filter(c => c.verdict === 'probleme').length}</h2>
+<p style="font-size:9.5pt">Ces points ne se corrigent pas depuis Windows, et pèsent souvent plus lourd
+que l'ensemble des réglages logiciels ci-dessous.</p>
+${DIAG.constats.filter(c => c.verdict === 'probleme').map(c => `
+  <div style="border-left:2.5pt solid #B00718;padding:2mm 4mm;margin:2.5mm 0;font-size:9.5pt">
+    <strong>${e(c.titre)}</strong><br>${e(c.constat)}<br>
+    <span style="color:#63676e">${e(c.cout)}</span><br>
+    <strong>À faire :</strong> ${e(c.action)}
+  </div>`).join('')}` : ''}
+
 <h2>Réglages appliqués — ${applique.length}</h2>
 ${applique.length ? `<table>${applique.map(t => `<tr>
   <td>${e(t.t)}</td>
@@ -3516,6 +3589,7 @@ refresh();
 initUpdates();
 chargerInventaire();
 RP.repere('lire').then(r => { if (r && !r.__err){ REPERE = r; majCompteurRepere(); } });
+chargerDiagnostic();
 })();
 </script>
 </body>

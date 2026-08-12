@@ -1,7 +1,7 @@
 {
   "name": "radical-performance-desktop",
   "productName": "Radical Performance",
-  "version": "3.4.0",
+  "version": "3.5.0",
   "description": "Console d'optimisation esport — application de bureau. Un outil WestLab.",
   "author": "WestLab",
   "license": "UNLICENSED",
@@ -30,6 +30,7 @@
       "inventory.js",
       "services.js",
       "network.js",
+      "diagnostic.js",
       "package.json",
       "node_modules/**/*"
     ],
