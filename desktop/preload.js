@@ -33,6 +33,12 @@ contextBridge.exposeInMainWorld('RP', {
   /** Autorise ou empêche une entrée de démarrer avec Windows. Réversible. */
   setStartup: (entree, actif) => ipcRenderer.invoke('rp:setStartup', { entree, actif }),
 
+  /** Catalogue des services allégeables et leur état réel. */
+  services: () => ipcRenderer.invoke('rp:services'),
+
+  /** Désactive ou restaure des services nommés. Élévation requise. */
+  applyServices: (ids, restaurer = false) => ipcRenderer.invoke('rp:applyServices', { ids, restaurer }),
+
   /** Liste ce que le mode match fermerait, sans rien fermer. */
   listApps: () => ipcRenderer.invoke('rp:listApps'),
 

@@ -171,6 +171,54 @@ ipcMain.handle('rp:updateInstall', () => {
 
 const { readProcesses, readHardware } = require('./inventory');
 
+/* ---- Allègement de Windows ----
+   L'état de départ de chaque service est enregistré AVANT modification, dans
+   le dossier de données de l'application. La restauration remet exactement ce
+   qui était là, pas une valeur par défaut supposée : un service réglé sur
+   « Manuel » ne doit pas revenir en « Automatique ». */
+const { CATALOGUE, readServices, scriptServices } = require('./services');
+const fsp = require('fs');
+const sauvegardeServices = () => path.join(app.getPath('userData'), 'services-origine.json');
+
+ipcMain.handle('rp:services', async () => {
+  try {
+    const r = await readServices();
+    let origine = {};
+    try { origine = JSON.parse(fsp.readFileSync(sauvegardeServices(), 'utf8')); } catch {}
+    return { catalogue: CATALOGUE, ...(r || {}), origine };
+  } catch (e) { return { __err: e.message }; }
+});
+
+ipcMain.handle('rp:applyServices', async (e, { ids, restaurer }) => {
+  if (!Array.isArray(ids) || !ids.length) return { ok: false, error: 'aucun service' };
+  let origine = {};
+  try { origine = JSON.parse(fsp.readFileSync(sauvegardeServices(), 'utf8')); } catch {}
+
+  if (!restaurer){
+    // on ne relève l'état d'origine qu'une fois : une seconde désactivation
+    // ne doit pas enregistrer « Disabled » comme état à restaurer
+    const etat = await readServices();
+    (etat && etat.services || []).forEach(s => {
+      if (s.present && ids.includes(s.id) && !(s.id in origine)) origine[s.id] = s.depart;
+    });
+    try { fsp.writeFileSync(sauvegardeServices(), JSON.stringify(origine, null, 2), 'utf8'); } catch {}
+  }
+
+  const script =
+    `Write-Host "  ${restaurer ? 'RESTAURATION' : 'ALLEGEMENT'} DE WINDOWS" -ForegroundColor Yellow\n` +
+    `Write-Host ""\n` + scriptServices(ids, origine, restaurer) +
+    `\nWrite-Host ""\nWrite-Host "  Termine. Un redemarrage rend l'effet complet." -ForegroundColor DarkGray`;
+
+  const res = await runElevated(script, chunk => {
+    if (win && !win.isDestroyed()) win.webContents.send('rp:log', chunk);
+  });
+  if (restaurer){
+    ids.forEach(i => delete origine[i]);
+    try { fsp.writeFileSync(sauvegardeServices(), JSON.stringify(origine, null, 2), 'utf8'); } catch {}
+  }
+  return { ok: !res.cancelled && res.code === 0, cancelled: res.cancelled, code: res.code, logPath: res.logPath };
+});
+
 ipcMain.handle('rp:listApps',  async () => { try { return await listApps();  } catch (e) { return { __err: e.message }; } });
 ipcMain.handle('rp:closeApps', async () => { try { return await closeApps(); } catch (e) { return { __err: e.message }; } });
 

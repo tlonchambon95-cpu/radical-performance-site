@@ -839,7 +839,7 @@ footer p{font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.1em;text-
       </ul>
       <a class="btn btn-g" href="https://github.com/tlonchambon95-cpu/radical-performance-downloads/releases/latest/download/RadicalPerformance-Setup.exe">Télécharger — 95 Mo</a>
       <span class="dl-note">
-        Windows 10/11 64 bits · version 2.7.0<br>
+        Windows 10/11 64 bits · version 2.8.0<br>
         <b>Application non signée</b> — Windows affichera « Windows a protégé votre PC » :
         cliquer sur « Informations complémentaires » puis « Exécuter quand même ».
       </span>
@@ -2555,8 +2555,78 @@ function renderProcessus(){
     <div class="sous-titre">Applications tierces en cours — ${tiers.length} groupe${tiers.length > 1 ? 's' : ''}, classés par temps CPU</div>
     <div class="liste">${tiers.slice(0, 25).map(p => ligne(p)).join('')}</div>
 
+    <div class="sous-titre">Alléger Windows — services optionnels</div>
+    <div id="zoneServices"><p style="color:var(--dim);font-size:13px">Lecture des services…</p></div>
+
     <div class="sous-titre">Composants Windows — ${sys.length} groupe${sys.length > 1 ? 's' : ''}</div>
     <div class="liste">${sys.slice(0, 15).map(p => ligne(p, 'sys')).join('')}</div>`;
+
+  /* ---- Services : catalogue nommé, jamais de balayage automatique ---- */
+  (async () => {
+    const s = await RP.services();
+    const z = document.getElementById('zoneServices');
+    if (!z) return;
+    if (!s || s.__err){ z.innerHTML = '<p style="color:var(--dim)">Lecture impossible.</p>'; return; }
+
+    const etat = Object.fromEntries((s.services || []).map(x => [x.id, x]));
+    const dispo = s.catalogue.filter(c => etat[c.id] && etat[c.id].present);
+    const actifs = dispo.filter(c => etat[c.id].etat === 'Running');
+    const surs = actifs.filter(c => c.v === 'sur');
+    const restaures = Object.keys(s.origine || {});
+
+    z.innerHTML = `
+      <div class="band" style="margin-bottom:14px">
+        <div class="txt">
+          <div class="kicker">Allègement</div>
+          <h3>${actifs.length} service${actifs.length > 1 ? 's' : ''} optionnel${actifs.length > 1 ? 's' : ''} en cours</h3>
+          <p>Chaque service est nommé, avec ce que sa désactivation casse. Aucun balayage automatique :
+             les services indispensables au démarrage, au réseau, au son et à la sécurité sont exclus par
+             une liste de protection que ce module refuse de franchir.</p>
+          <div class="count"><b>${surs.length}</b> sans effet visible · ${actifs.length - surs.length} avec contrepartie
+             ${restaures.length ? ' · <b>' + restaures.length + '</b> déjà désactivé(s) par l\'application' : ''}</div>
+        </div>
+        <div class="acts">
+          <button class="btn btn-g" id="btnAlleger"${surs.length ? '' : ' disabled'}>Désactiver les ${surs.length} sans effet</button>
+          <button class="btn btn-ghost" id="btnAllegerTout"${actifs.length ? '' : ' disabled'}>Tout désactiver (${actifs.length})</button>
+          <button class="btn btn-ghost" id="btnRestaurerSvc"${restaures.length ? '' : ' disabled'}>Restaurer l'origine</button>
+        </div>
+      </div>
+      <div class="liste">
+        ${dispo.map(c => {
+          const e = etat[c.id];
+          const on = e.etat === 'Running';
+          return `<div class="ligne">
+            <div class="nom"><b>${esc(c.t)} <span class="badge ${c.v === 'sur' ? 'b-marginal' : 'b-tradeoff'}">${c.v === 'sur' ? 'Sans effet visible' : 'Contrepartie'}</span></b>
+              <small>${esc(c.casse)}</small></div>
+            <div class="val">${esc(c.id)}<br>${on ? 'en cours' : '<span style="color:#3FB950">arrêté</span>'}</div>
+          </div>`;
+        }).join('')}
+      </div>`;
+
+    const lancer = async (ids, restaurer) => {
+      if (!ids.length) return;
+      const ok = await RP.confirm({
+        title: restaurer ? 'Restaurer les services' : 'Désactiver des services Windows',
+        message: (restaurer ? 'Remettre ' : 'Désactiver ') + ids.length + ' service(s) ?',
+        detail: (restaurer
+          ? "Chaque service retrouve exactement le type de démarrage qu'il avait avant, relevé au moment de la désactivation."
+          : ids.map(i => { const c = s.catalogue.find(x => x.id === i); return '  ' + c.t + '\n     → ' + c.casse; }).join('\n\n')) +
+          "\n\nWindows va demander une autorisation administrateur. Un redémarrage rend l'effet complet.",
+        confirmLabel: restaurer ? 'Restaurer' : 'Désactiver'
+      });
+      if (!ok) return;
+      const r = await RP.applyServices(ids, restaurer);
+      if (r && r.ok){ toast(restaurer ? 'Services restaurés' : ids.length + ' service(s) désactivé(s)'); }
+      else if (r && r.cancelled){ toast('Annulé — autorisation refusée'); }
+      else { toast('Terminé avec des erreurs'); }
+      await chargerInventaire();
+      renderProcessus();
+    };
+
+    document.getElementById('btnAlleger').onclick     = () => lancer(surs.map(c => c.id), false);
+    document.getElementById('btnAllegerTout').onclick = () => lancer(actifs.map(c => c.id), false);
+    document.getElementById('btnRestaurerSvc').onclick = () => lancer(restaures, true);
+  })();
 
   /* ---- Mode match : le bouton généralisé ---- */
   (async () => {
