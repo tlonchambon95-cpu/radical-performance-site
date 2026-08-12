@@ -168,6 +168,10 @@ ipcMain.handle('rp:updateInstall', () => {
   return { ok: true };
 });
 
+const { readProcesses, readHardware } = require('./inventory');
+ipcMain.handle('rp:processes', async () => { try { return await readProcesses(); } catch (e) { return { __err: e && e.message }; } });
+ipcMain.handle('rp:hardware',  async () => { try { return await readHardware();  } catch (e) { return { __err: e && e.message }; } });
+
 ipcMain.handle('rp:machine', () => readMachine());
 ipcMain.handle('rp:state', async () => {
   try { return await readState(); }

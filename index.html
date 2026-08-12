@@ -523,6 +523,70 @@ body.native #floor{
 .b-off{color:var(--dim);border-color:var(--line2);background:rgba(255,255,255,.03)}
 .b-unk{color:var(--tradeoff);border-color:rgba(255,176,32,.35);background:rgba(255,176,32,.07)}
 
+/* ---- Modules Processus et BIOS ---- */
+.liste{display:flex;flex-direction:column;gap:7px;margin-bottom:26px}
+.ligne{
+  display:flex;align-items:center;gap:14px;padding:11px 15px;border-radius:7px;
+  background:rgba(255,255,255,.03);border:1px solid var(--line);
+}
+.ligne .nom{flex:1;min-width:0}
+.ligne .nom b{font-size:14px;font-weight:600;display:block}
+.ligne .nom small{
+  font-size:11.5px;color:var(--dim);display:block;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.ligne .val{
+  font-family:'JetBrains Mono';font-size:11px;color:var(--muted);
+  text-align:right;flex:none;line-height:1.5;
+}
+.ligne .val em{font-style:normal;color:var(--ink)}
+.ligne.sys{opacity:.5}
+.ligne.lourd{border-color:rgba(255,176,32,.35)}
+.sous-titre{
+  font-family:'JetBrains Mono';font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--dim);margin:26px 0 11px;
+}
+.sous-titre:first-child{margin-top:0}
+.compteur{
+  display:flex;align-items:center;gap:22px;flex-wrap:wrap;
+  padding:17px 20px;border-radius:9px;margin-bottom:8px;
+  background:linear-gradient(120deg,rgba(255,59,69,.08),rgba(255,59,69,.02));
+  border:1px solid rgba(255,59,69,.3);
+}
+.compteur .gros{font:700 34px 'Space Grotesk';letter-spacing:-.02em;line-height:1}
+.compteur .gros small{font-size:14px;color:var(--dim);font-weight:400}
+.compteur .lbl{
+  font-family:'JetBrains Mono';font-size:9.5px;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--dim);margin-bottom:6px;
+}
+.compteur .note{flex:1;min-width:280px;font-size:12.5px;color:var(--muted);line-height:1.55}
+.compteur .note b{color:var(--tradeoff)}
+
+.bios-carte{
+  border-radius:9px;padding:18px 20px;margin-bottom:20px;
+  background:rgba(255,255,255,.035);border:1px solid var(--line);
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px 26px;
+}
+.bios-carte .k{
+  font-family:'JetBrains Mono';font-size:9px;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--dim);margin-bottom:4px;
+}
+.bios-carte .v{font-size:14px;color:var(--ink)}
+.bios-reg{
+  border-radius:8px;padding:16px 18px;margin-bottom:11px;
+  background:linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,.015));
+  border:1px solid var(--line);
+}
+.bios-reg.hs{opacity:.45}
+.bios-reg h4{font-size:15.5px;margin-bottom:6px;display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.bios-reg .why{font-size:13px;color:var(--muted);line-height:1.55;margin-bottom:11px}
+.bios-reg .chemins{display:flex;flex-direction:column;gap:5px}
+.bios-reg .chemin{
+  display:flex;gap:11px;font-family:'JetBrains Mono';font-size:11px;line-height:1.5;
+}
+.bios-reg .chemin b{color:var(--volt);flex:none;width:78px;font-weight:500}
+.bios-reg .chemin span{color:var(--muted)}
+
 /* ---- Bandeau de mise à jour ---- */
 .upd{
   display:none;align-items:center;gap:18px;flex-wrap:wrap;
@@ -775,7 +839,7 @@ footer p{font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.1em;text-
       </ul>
       <a class="btn btn-g" href="https://github.com/tlonchambon95-cpu/radical-performance-downloads/releases/latest/download/RadicalPerformance-Setup.exe">Télécharger — 95 Mo</a>
       <span class="dl-note">
-        Windows 10/11 64 bits · version 2.4.0<br>
+        Windows 10/11 64 bits · version 2.5.0<br>
         <b>Application non signée</b> — Windows affichera « Windows a protégé votre PC » :
         cliquer sur « Informations complémentaires » puis « Exécuter quand même ».
       </span>
@@ -1990,11 +2054,15 @@ shell.innerHTML = `
     <div class="side-sec">Réglages</div>
     <div id="sideModules"></div>
     <div class="side-sec">Système</div>
+    <button class="side-item" data-view="proc"><span class="lbl">Processus</span><span class="cnt" id="cntProc"></span></button>
+    <button class="side-item" data-view="bios"><span class="lbl">BIOS</span></button>
     <button class="side-item" data-view="method"><span class="lbl">Méthode &amp; honnêteté</span></button>
   </aside>
   <main class="main" id="appMain">
     <div class="view on" id="viewDash"></div>
     <div class="view" id="viewModule"></div>
+    <div class="view" id="viewProc"></div>
+    <div class="view" id="viewBios"></div>
     <div class="view" id="viewMethod"></div>
   </main>`;
 document.body.appendChild(shell);
@@ -2090,17 +2158,21 @@ function buildSide(){
   });
 }
 
+const VUES_FIXES = { dash: 'viewDash', method: 'viewMethod', proc: 'viewProc', bios: 'viewBios' };
+
 function setView(v){
   currentView = v;
   document.querySelectorAll('.side-item').forEach(b => b.classList.toggle('on', b.dataset.view === v));
-  const dash = v === 'dash', meth = v === 'method';
-  document.getElementById('viewDash').classList.toggle('on', dash);
-  document.getElementById('viewMethod').classList.toggle('on', meth);
-  document.getElementById('viewModule').classList.toggle('on', !dash && !meth);
-  if (!dash && !meth){
+  const fixe = VUES_FIXES[v] || null;
+  Object.values(VUES_FIXES).forEach(id => document.getElementById(id).classList.toggle('on', VUES_FIXES[v] === id));
+  document.getElementById('viewModule').classList.toggle('on', !fixe);
+  const dash = v === 'dash';
+  if (!fixe){
     currentModule = v.slice(4);
     renderModule();
   }
+  if (v === 'proc') renderProcessus();
+  if (v === 'bios') renderBios();
   /* Les canvas ne tournent que sur le tableau de bord — inutile de consommer
      du GPU pendant qu'on parcourt les réglages. */
   heroLive = dash;
@@ -2381,6 +2453,252 @@ async function initUpdates(){
   RP.updateCheck();
 }
 
+/* ================= MODULE PROCESSUS =================
+   Le compteur de processus est affiché parce qu'il parle à l'utilisateur,
+   mais il est présenté pour ce qu'il est : un chiffre, pas une mesure de
+   performance. Un processus endormi ne coûte rien ; ce qui pèse pendant une
+   partie, c'est le temps CPU consommé. C'est donc lui qui sert au classement.
+   Aucune coupe en masse : chaque entrée de démarrage est nommée et traitée
+   séparément, conformément à la charte du produit. */
+const OBJECTIF_PROC = 70;
+let PROCS = null;
+let HW    = null;
+
+/* Ces deux relevés sont plus lents que les sondes (Get-ScheduledTask notamment) :
+   on ne bloque pas l'ouverture de l'application, on remplit quand ça arrive. */
+async function chargerInventaire(){
+  const [p, h] = await Promise.all([
+    RP.processes().catch(e => ({ __err: e && e.message })),
+    RP.hardware().catch(e => ({ __err: e && e.message }))
+  ]);
+  PROCS = p; HW = h;
+  const c = document.getElementById('cntProc');
+  if (c && PROCS && PROCS.total) c.textContent = PROCS.total;
+  if (currentView === 'proc') renderProcessus();
+  if (currentView === 'bios') renderBios();
+}
+
+function renderProcessus(){
+  const v = document.getElementById('viewProc');
+  if (!PROCS){ v.innerHTML = '<div class="dash-intro"><h2>Processus</h2><p>Lecture en cours…</p></div>'; return; }
+  if (PROCS.__err){ v.innerHTML = '<div class="dash-intro"><h2>Processus</h2><p>Lecture impossible : ' + PROCS.__err + '</p></div>'; return; }
+
+  const tiers = PROCS.procs.filter(p => !p.systeme).sort((a, b) => b.cpu - a.cpu || b.mo - a.mo);
+  const sys   = PROCS.procs.filter(p => p.systeme).sort((a, b) => b.cpu - a.cpu);
+  const dem   = PROCS.demarrage;
+  const cpuTiers = tiers.reduce((a, p) => a + p.cpu, 0);
+
+  const ligne = (p, cls) => `
+    <div class="ligne ${cls || ''}${p.cpu > 60 ? ' lourd' : ''}">
+      <div class="nom"><b>${esc(p.nom)}${p.n > 1 ? ' <span style="color:var(--dim);font-weight:400">×' + p.n + '</span>' : ''}</b>
+        <small>${esc(p.chemin || 'chemin non lisible')}</small></div>
+      <div class="val"><em>${p.cpu} s</em> de CPU<br>${p.mo} Mo</div>
+    </div>`;
+
+  v.innerHTML = `
+    <div class="dash-intro" style="margin-bottom:22px">
+      <span class="chip"><span class="pulse"></span>Processus</span>
+      <h2>Ce qui tourne, et ce qui coûte</h2>
+    </div>
+
+    <div class="compteur">
+      <div>
+        <div class="lbl">Processus en cours</div>
+        <div class="gros">${PROCS.total} <small>/ objectif ${OBJECTIF_PROC}</small></div>
+      </div>
+      <div>
+        <div class="lbl">Temps CPU des applications tierces</div>
+        <div class="gros">${cpuTiers} <small>s</small></div>
+      </div>
+      <div>
+        <div class="lbl">Lancés au démarrage</div>
+        <div class="gros">${dem.length}</div>
+      </div>
+      <p class="note"><b>Ce compteur est indicatif, pas une mesure de performance.</b>
+        Un Windows 11 sain tourne entre 150 et 250 processus, et un processus endormi ne consomme rien.
+        Le chiffre qui compte est celui du milieu : le temps CPU réellement pris par les applications tierces.
+        Descendre le compteur en coupant des composants système est documenté comme sans gain et source d'instabilité.</p>
+    </div>
+
+    <div class="sous-titre">Lancé automatiquement au démarrage — ${dem.length} entrée${dem.length > 1 ? 's' : ''}</div>
+    <div class="liste">
+      ${dem.length ? dem.map(d => `
+        <div class="ligne">
+          <div class="nom"><b>${esc(d.nom)}</b><small>${esc(d.cible || '')}</small></div>
+          <div class="val">${d.type}</div>
+        </div>`).join('') : '<div class="ligne"><div class="nom"><b>Aucune entrée</b><small>Rien ne se lance automatiquement.</small></div></div>'}
+    </div>
+
+    <div class="sous-titre">Applications tierces en cours — ${tiers.length} groupe${tiers.length > 1 ? 's' : ''}, classés par temps CPU</div>
+    <div class="liste">${tiers.slice(0, 25).map(p => ligne(p)).join('')}</div>
+
+    <div class="sous-titre">Composants Windows — ${sys.length} groupe${sys.length > 1 ? 's' : ''}</div>
+    <div class="liste">${sys.slice(0, 15).map(p => ligne(p, 'sys')).join('')}</div>`;
+}
+
+/* ================= MODULE BIOS =================
+   Les libellés diffèrent d'un constructeur à l'autre pour un même réglage :
+   d'où la table par marque. Les chemins sont indicatifs — ils bougent d'un
+   modèle et d'une version de BIOS à l'autre. */
+const BIOS_REGLAGES = [
+  {
+    t: 'Profil mémoire XMP / EXPO', v: 'real',
+    why: "Sans profil actif, la mémoire tourne à la fréquence de secours du JEDEC, souvent très en dessous de ce pour quoi elle a été vendue. C'est le gain BIOS le plus important et le plus systématique, et il est mesurable : l'application compare la vitesse notée sur les barrettes à celle réellement appliquée.",
+    chemins: {
+      ASUS:     'Ai Tweaker → Ai Overclock Tuner → XMP I ou II (Intel) / D.O.C.P. ou EXPO (AMD)',
+      MSI:      'OC → Extreme Memory Profile (XMP) / EXPO',
+      Gigabyte: 'Tweaker → Extreme Memory Profile (X.M.P.) / EXPO',
+      ASRock:   'OC Tweaker → Load XMP Setting / EXPO'
+    }
+  },
+  {
+    t: 'Resizable BAR / Smart Access Memory', v: 'real',
+    why: "Laisse le processeur adresser toute la mémoire du GPU d'un coup au lieu de fenêtres de 256 Mo. Gain réel mais variable selon les jeux. Exige Above 4G Decoding activé et CSM désactivé — les deux vont ensemble.",
+    chemins: {
+      ASUS:     'Advanced → PCI Subsystem Settings → Above 4G Decoding, puis Re-Size BAR Support',
+      MSI:      'Settings → Advanced → PCIe/PCI Sub-system Settings → Above 4G memory, puis Re-Size BAR Support',
+      Gigabyte: 'Settings → IO Ports → Above 4G Decoding, puis Re-Size BAR Support',
+      ASRock:   'Advanced → Chipset Configuration → Above 4G Decoding, puis Re-Size BAR Support'
+    }
+  },
+  {
+    t: 'États de veille du processeur (C-States)', v: 'tradeoff',
+    why: "Les états profonds mettent des cœurs en sommeil ; les réveiller coûte quelques microsecondes, ce qui ajoute de la variabilité au frametime. Les désactiver stabilise, au prix d'une consommation et d'une température plus élevées en permanence. À réserver à une machine de compétition correctement refroidie.",
+    chemins: {
+      ASUS:     'Advanced → CPU Configuration → CPU - Power Management Control → CPU C-states',
+      MSI:      'OC → Advanced CPU Configuration → CPU C State / C1E Support',
+      Gigabyte: 'Settings → Advanced CPU Settings → CPU Enhanced Halt (C1E) et C6/C7 State Support',
+      ASRock:   'Advanced → CPU Configuration → CPU C States Support'
+    }
+  },
+  {
+    t: 'Turbo maintenu sur tous les cœurs', v: 'tradeoff', besoinDeverrouille: false,
+    why: "Force le processeur à tenir sa fréquence turbo sur tous les cœurs au lieu de la faire retomber. Ce n'est pas de l'overclock : on reste dans les fréquences prévues par le fondeur, mais sans les paliers. Exige un refroidissement à la hauteur, sinon la limite thermique reprend la main et le résultat est pire.",
+    chemins: {
+      ASUS:     'Ai Tweaker → ASUS MultiCore Enhancement → Enabled',
+      MSI:      'OC → Enhanced Turbo → Enabled',
+      Gigabyte: 'Tweaker → Advanced CPU Settings → Turbo Boost / Multi-Core Enhancement',
+      ASRock:   'OC Tweaker → CPU Configuration → Multi Core Enhancement'
+    }
+  },
+  {
+    t: 'Overclock du processeur (multiplicateur)', v: 'tradeoff', besoinDeverrouille: true,
+    why: "Uniquement sur un processeur déverrouillé — référence Intel finissant par K, KF, KS ou X, ou n'importe quel Ryzen. Sur une puce verrouillée le menu est absent ou sans effet. Gain de 2 à 6 % de FPS en pratique, contre un vrai risque d'instabilité en pleine partie et une usure qui n'apparaît qu'après des mois.",
+    chemins: {
+      ASUS:     'Ai Tweaker → CPU Core Ratio',
+      MSI:      'OC → CPU Ratio Apply Mode / CPU Ratio',
+      Gigabyte: 'Tweaker → CPU Clock Ratio',
+      ASRock:   'OC Tweaker → CPU Ratio'
+    }
+  },
+  {
+    t: 'Virtualisation (VT-x / SVM)', v: 'tradeoff',
+    why: "La désactiver empêche Windows de charger VBS et l'isolation du noyau, ce qui retire une couche d'indirection sur les accès mémoire. C'est le pendant BIOS du réglage « Intégrité de la mémoire » de la console. Baisse réelle de sécurité, et incompatible avec toute machine virtuelle ou avec WSL.",
+    chemins: {
+      ASUS:     'Advanced → CPU Configuration → Intel (VMX) Virtualization Technology / SVM Mode',
+      MSI:      'OC → CPU Features → Intel Virtualization Tech / SVM Mode',
+      Gigabyte: 'Settings → Miscellaneous → Intel Virtualization Technology / SVM Mode',
+      ASRock:   'Advanced → CPU Configuration → Intel Virtualization Technology / SVM Mode'
+    }
+  },
+  {
+    t: 'ErP / Deep Sleep', v: 'real',
+    why: "À DÉSACTIVER. Ces modes coupent l'alimentation des ports USB quand la machine est éteinte ou en veille, et certains périphériques mettent alors du temps à retrouver leur fréquence d'interrogation au réveil. Les laisser désactivés garantit une souris à pleine fréquence dès le premier clic.",
+    chemins: {
+      ASUS:     'Advanced → APM Configuration → ErP Ready → Disabled',
+      MSI:      'Settings → Advanced → Power Management Setup → ErP Ready → Disabled',
+      Gigabyte: 'Settings → Platform Power → ErP → Disabled',
+      ASRock:   'Advanced → ACPI Configuration → Deep Sleep → Disabled'
+    }
+  },
+  {
+    t: 'Spread Spectrum', v: 'marginal',
+    why: "Module légèrement l'horloge pour réduire les interférences électromagnétiques. Le désactiver est souvent conseillé dans les guides d'overclock pour la stabilité des hautes fréquences, mais l'effet sur la latence en jeu n'a jamais été démontré. À ne toucher que si tu overclockes réellement.",
+    chemins: {
+      ASUS:     'Ai Tweaker → CPU Spread Spectrum',
+      MSI:      'OC → CPU Spread Spectrum',
+      Gigabyte: 'Tweaker → Advanced CPU Settings → CPU/PCIe Spread Spectrum',
+      ASRock:   'OC Tweaker → Spread Spectrum'
+    }
+  }
+];
+
+/* Constructeurs de machines assemblées : leur BIOS n'expose qu'une fraction
+   de ces réglages, quand il en expose. Le dire vaut mieux que d'envoyer
+   l'utilisateur chercher un menu qui n'existe pas. */
+const OEM = ['LENOVO', 'DELL', 'HP', 'HEWLETT', 'ACER', 'FUJITSU', 'MEDION', 'PACKARD'];
+
+function renderBios(){
+  const v = document.getElementById('viewBios');
+  if (!HW){ v.innerHTML = '<div class="dash-intro"><h2>BIOS</h2><p>Lecture en cours…</p></div>'; return; }
+  if (HW.__err){ v.innerHTML = '<div class="dash-intro"><h2>BIOS</h2><p>Lecture impossible : ' + HW.__err + '</p></div>'; return; }
+
+  const fab = (HW.sysFabricant || HW.carteFabricant || '').toUpperCase();
+  const estOem = OEM.some(o => fab.includes(o));
+  const marque = ['ASUS', 'MSI', 'Gigabyte', 'ASRock'].find(m => fab.includes(m.toUpperCase()));
+  const xmpAbsent = HW.ramVitesse && HW.ramVitesseNom && HW.ramVitesseNom < HW.ramVitesse;
+
+  const cel = (k, val) => `<div><div class="k">${k}</div><div class="v">${esc(String(val ?? '—'))}</div></div>`;
+
+  const reg = r => {
+    const inapplicable = r.besoinDeverrouille && !HW.cpuDeverrouille;
+    const marques = Object.entries(r.chemins)
+      .filter(([m]) => !marque || m === marque)
+      .map(([m, c]) => `<div class="chemin"><b>${m}</b><span>${esc(c)}</span></div>`).join('');
+    return `
+      <div class="bios-reg${inapplicable ? ' hs' : ''}">
+        <h4>${esc(r.t)}
+          <span class="badge ${VERDICT[r.v].cls}">${VERDICT[r.v].label}</span>
+          ${inapplicable ? '<span class="badge b-myth">Impossible : processeur verrouillé</span>' : ''}
+          ${r.t.includes('XMP') && xmpAbsent ? '<span class="b-state b-off">Profil non appliqué sur cette machine</span>' : ''}
+        </h4>
+        <p class="why">${esc(r.why)}</p>
+        <div class="chemins">${marques}</div>
+      </div>`;
+  };
+
+  v.innerHTML = `
+    <div class="dash-intro" style="margin-bottom:22px">
+      <span class="chip"><span class="pulse"></span>BIOS</span>
+      <h2>Réglages à faire avant Windows</h2>
+      <p>Ces réglages ne sont accessibles qu'au démarrage de la machine, avant le chargement de Windows. Aucun logiciel ne peut les modifier — c'est une limite du firmware, pas de cet outil.</p>
+    </div>
+
+    <div class="bios-carte">
+      ${cel('Carte mère', (HW.carteFabricant || '') + ' ' + (HW.carteModele || ''))}
+      ${cel('Machine', (HW.sysFabricant || '') + ' ' + (HW.sysModele || ''))}
+      ${cel('BIOS', (HW.biosVersion || '') + (HW.biosDate ? ' · ' + HW.biosDate : ''))}
+      ${cel('Processeur', HW.cpu)}
+      ${cel('Processeur déverrouillé', HW.cpuDeverrouille ? 'oui' : 'non — overclock impossible')}
+      ${cel('Mémoire', HW.ramBarrettes + ' barrette(s) · ' + (HW.ramVitesseNom || '?') + ' MT/s appliqués sur ' + (HW.ramVitesse || '?') + ' notés')}
+    </div>
+
+    ${estOem ? `
+    <div class="admin-warn">
+      <p><b>Machine de marque (${esc(HW.sysFabricant || '')}).</b> Les BIOS des machines assemblées
+      n'exposent qu'une petite partie des réglages ci-dessous, parfois aucun : pas de profil mémoire,
+      pas de contrôle des C-states, pas de multiplicateur. Les chemins indiqués sont ceux des cartes
+      du commerce — attends-toi à ne pas les trouver. Vérifie s'il existe un menu constructeur, souvent
+      appelé « Power » ou « Performance ».</p>
+    </div>` : ''}
+
+    ${xmpAbsent ? `
+    <div class="admin-warn" style="border-color:rgba(255,59,69,.4);background:rgba(255,59,69,.07)">
+      <p><b style="color:var(--volt)">Mémoire sous-cadencée.</b> Tes barrettes sont notées
+      ${HW.ramVitesse} MT/s et tournent à ${HW.ramVitesseNom} MT/s. Le profil XMP/EXPO n'est pas
+      pleinement appliqué : c'est le gain BIOS le plus concret disponible sur cette machine.</p>
+    </div>` : ''}
+
+    ${marque ? `<div class="sous-titre">Chemins pour ${marque} — détecté sur cette machine</div>`
+             : `<div class="sous-titre">Chemins par marque — les libellés diffèrent d'un constructeur à l'autre</div>`}
+    ${BIOS_REGLAGES.map(reg).join('')}
+
+    <p style="font-size:12.5px;color:var(--dim);margin-top:18px;line-height:1.6">
+      Les chemins sont indicatifs : ils changent d'un modèle et d'une version de BIOS à l'autre.
+      Note toujours la valeur d'origine avant de modifier quoi que ce soit — un BIOS n'a pas de
+      bouton « annuler », seulement une remise à zéro complète.</p>`;
+}
+
 /* ================= LECTURE DE L'ÉTAT ================= */
 async function refresh(){
   /* Rien ici ne doit pouvoir laisser une fenêtre vide et muette : une lecture
@@ -2557,6 +2875,7 @@ document.addEventListener('keydown', e => {
 
 refresh();
 initUpdates();
+chargerInventaire();
 })();
 </script>
 </body>

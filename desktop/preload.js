@@ -24,6 +24,12 @@ contextBridge.exposeInMainWorld('RP', {
   /** État vérifié de chaque réglage : { state:{id:bool|null}, admin:bool }. */
   state: () => ipcRenderer.invoke('rp:state'),
 
+  /** Processus en cours et entrées de démarrage automatique (lecture seule). */
+  processes: () => ipcRenderer.invoke('rp:processes'),
+
+  /** Carte mère, BIOS, processeur, mémoire (lecture seule). */
+  hardware: () => ipcRenderer.invoke('rp:hardware'),
+
   /** Relance l'application en administrateur (ferme l'instance courante). */
   elevate: () => ipcRenderer.invoke('rp:elevate'),
 
