@@ -839,7 +839,7 @@ footer p{font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.1em;text-
       </ul>
       <a class="btn btn-g" href="https://github.com/tlonchambon95-cpu/radical-performance-downloads/releases/latest/download/RadicalPerformance-Setup.exe">Télécharger — 95 Mo</a>
       <span class="dl-note">
-        Windows 10/11 64 bits · version 2.9.0<br>
+        Windows 10/11 64 bits · version 3.0.0<br>
         <b>Application non signée</b> — Windows affichera « Windows a protégé votre PC » :
         cliquer sur « Informations complémentaires » puis « Exécuter quand même ».
       </span>
@@ -2149,7 +2149,7 @@ document.getElementById('viewMethod').innerHTML = `
       <li><b>Écran — mesuré.</b> La fréquence est lue sur la machine, et la durée d'une image en découle exactement : 1000 divisé par la fréquence. Aucune supposition.</li>
       <li><b>Souris → USB — estimé.</b> Windows n'expose pas de façon fiable la fréquence d'interrogation du périphérique.</li>
       <li><b>Rendu + file GPU — estimé.</b> Dépend du jeu, de la scène et du nombre d'images par seconde du moment.</li>
-      <li><b>Réseau — estimé.</b> En attente d'une vraie mesure de ping.</li>
+      <li><b>Réseau — mesuré, en partie.</b> Le trajet aller-retour est relevé par une série de pings vers des résolveurs publics, avec sa gigue et son taux de perte. C'est le <b>plancher</b> de la connexion : un serveur de partie est plus loin, et le trafic de jeu passe en UDP là où la mesure utilise ICMP. La part serveur et tickrate reste une constante.</li>
     </ul>
     <p style="margin-top:12px">Elle ne compte que les réglages <b>réellement en place</b>, jamais ceux qui sont simplement cochés.</p>
   </div>`;
@@ -2316,10 +2316,22 @@ function renderDash(){
           ${ecranMesure.hz < 100 ? `<b style="color:var(--tradeoff)">À ${ecranMesure.hz} Hz, ton écran est de loin ton premier poste de latence :
           il pèse plus lourd que les 51 réglages réunis.</b>` : ''}
         </p>
+        ` : ''}
+        ${reseauMesure ? `
+        <p style="margin-top:11px;font-size:13.5px">
+          <b>Réseau mesuré : ${String(reseauMesure.rtt).replace('.', ',')} ms</b> de trajet aller-retour,
+          gigue ${String(reseauMesure.gigue).replace('.', ',')} ms, ${reseauMesure.perte} % de perte.
+          ${reseauMesure.gigue > 5 ? `<b style="color:var(--tradeoff)">Gigue élevée : ta latence varie d'un paquet à l'autre,
+          ce qui se ressent plus qu'une moyenne haute et stable.</b>`
+          : `Connexion stable — c'est la gigue qui compte le plus en jeu, et la tienne est basse.`}
+        </p>
         <p style="margin-top:7px;font-size:12.5px;color:var(--dim)">
-          Les trois autres segments restent estimés : la fréquence d'interrogation de la souris n'est
-          pas exposée de façon fiable par Windows, le rendu dépend du jeu, et le réseau attend une
-          vraie mesure de ping.</p>` : ''}
+          Mesuré vers des résolveurs publics, pas vers un serveur de partie : c'est le
+          <b>plancher</b> de ta connexion. Un serveur de jeu est plus loin, et le trafic de jeu passe
+          en UDP là où cette mesure utilise ICMP. La part serveur et tickrate reste estimée à ${TICKRATE} ms.</p>` : ''}
+        <p style="margin-top:7px;font-size:12.5px;color:var(--dim)">
+          Restent estimés : la fréquence d'interrogation de la souris, que Windows n'expose pas de
+          façon fiable, et le rendu, qui dépend du jeu et de la scène.</p>
       </div>
       <div class="dash-gauge" id="gaugeSlot"></div>
     </div>
@@ -2486,7 +2498,26 @@ async function initUpdates(){
    jeu ; le réseau dépendra d'une mesure de ping, qui viendra ensuite. Ces
    trois-là restent donc des estimations, et le tableau de bord le dit. */
 const REPONSE_DALLE = 4.8;   // temps de réponse moyen d'une dalle, hors balayage
+/* Le modèle posait 38 ms pour le réseau : ~30 de trajet + ~8 de tickrate et de
+   traitement serveur. Seul le trajet est mesurable ici ; la part serveur reste
+   une constante, elle dépend du jeu et de sa fréquence de rafraîchissement. */
+const TICKRATE = 8;
 let ecranMesure = null;
+let reseauMesure = null;
+
+function ajusterReseau(p){
+  if (!p || p.__err || p.rtt == null) return false;
+  const seg = SEGMENTS.find(s => s.id === 'net');
+  if (!seg) return false;
+  seg.base = +(p.rtt + TICKRATE).toFixed(1);
+  seg.name = 'Réseau (' + String(p.rtt).replace('.', ',') + ' ms mesurés)';
+  BASE_TOTAL = SEGMENTS.reduce((a, s) => a + s.base, 0);
+  reseauMesure = p;
+
+  const v = document.querySelector('[data-cv="net"]');
+  if (v && v.parentElement) v.parentElement.firstElementChild.textContent = seg.name;
+  return true;
+}
 
 function ajusterSegments(m){
   if (!m || !m.hz) return false;
@@ -2518,11 +2549,18 @@ let HW    = null;
 /* Ces deux relevés sont plus lents que les sondes (Get-ScheduledTask notamment) :
    on ne bloque pas l'ouverture de l'application, on remplit quand ça arrive. */
 async function chargerInventaire(){
-  const [p, h] = await Promise.all([
+  const [p, h, ping] = await Promise.all([
     RP.processes().catch(e => ({ __err: e && e.message })),
-    RP.hardware().catch(e => ({ __err: e && e.message }))
+    RP.hardware().catch(e => ({ __err: e && e.message })),
+    RP.ping().catch(e => ({ __err: e && e.message }))
   ]);
   PROCS = p; HW = h;
+  /* La mesure réseau arrive après le premier rendu : on réajuste la jauge
+     et on la redessine, plutôt que de retarder l'ouverture de l'application. */
+  if (ajusterReseau(ping)){
+    updateAll();
+    if (currentView === 'dash') renderDash();
+  }
   const c = document.getElementById('cntProc');
   if (c && PROCS && PROCS.total) c.textContent = PROCS.total;
   if (currentView === 'proc') renderProcessus();

@@ -219,6 +219,9 @@ ipcMain.handle('rp:applyServices', async (e, { ids, restaurer }) => {
   return { ok: !res.cancelled && res.code === 0, cancelled: res.cancelled, code: res.code, logPath: res.logPath };
 });
 
+const { readPing } = require('./network');
+ipcMain.handle('rp:ping', async () => { try { return await readPing(); } catch (e) { return { __err: e.message }; } });
+
 ipcMain.handle('rp:listApps',  async () => { try { return await listApps();  } catch (e) { return { __err: e.message }; } });
 ipcMain.handle('rp:closeApps', async () => { try { return await closeApps(); } catch (e) { return { __err: e.message }; } });
 

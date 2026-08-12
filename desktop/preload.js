@@ -33,6 +33,9 @@ contextBridge.exposeInMainWorld('RP', {
   /** Autorise ou empêche une entrée de démarrer avec Windows. Réversible. */
   setStartup: (entree, actif) => ipcRenderer.invoke('rp:setStartup', { entree, actif }),
 
+  /** Mesure réelle de la latence réseau : RTT, gigue, perte. Lecture seule. */
+  ping: () => ipcRenderer.invoke('rp:ping'),
+
   /** Catalogue des services allégeables et leur état réel. */
   services: () => ipcRenderer.invoke('rp:services'),
 
