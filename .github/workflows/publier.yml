@@ -58,6 +58,34 @@ jobs:
       - name: Contrôles d'intégrité
         run: node check.js
 
+      # Les journaux de ce depot ne sont pas lisibles sans authentification.
+      # Ces controles sont donc decoupes en etapes distinctes : leur NOM et
+      # leur resultat sont publics, ce qui suffit a identifier la panne.
+      - name: DIAG le secret RELEASE_TOKEN existe
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+        run: |
+          if (-not $env:GH_TOKEN) {
+            Write-Error "Le secret RELEASE_TOKEN est absent ou vide dans ce depot."
+            exit 1
+          }
+          Write-Host ("Jeton present, longueur " + $env:GH_TOKEN.Length)
+
+      - name: DIAG le jeton peut ecrire dans radical-performance-downloads
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+        run: |
+          $h = @{ 'User-Agent' = 'rp'; 'Accept' = 'application/vnd.github+json'; 'Authorization' = "Bearer $env:GH_TOKEN" }
+          try { $r = Invoke-RestMethod "https://api.github.com/repos/tlonchambon95-cpu/radical-performance-downloads" -Headers $h }
+          catch { Write-Error "Le jeton ne peut pas lire le depot de publication."; exit 1 }
+          Write-Host ("depot=" + $r.full_name + "  push=" + $r.permissions.push)
+          if (-not $r.permissions.push) {
+            Write-Error "Le jeton n'a pas l'autorisation Contents: Read and write."
+            exit 1
+          }
+
       # electron-builder publie lui-meme : il connait la cible (build.publish
       # dans package.json) et sait exactement quels fichiers joindre, y compris
       # latest.yml qu'il vient de generer. Une etape en moins, et aucun risque
