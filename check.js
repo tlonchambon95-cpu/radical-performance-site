@@ -282,9 +282,19 @@ const warn = (label, cond, detail = '') => {
 /* Les mentions légales viennent du site en ligne : structure complète, mais
    les coordonnées de l'éditeur restent à renseigner (obligation légale pour
    un site professionnel français). */
-const perso = (html.match(/\[PRÉNOM NOM\]|\[ADRESSE[^\]]*\]|\[14 CHIFFRES\]/g) || []).length;
-warn('coordonnées de l\'éditeur renseignées', perso === 0,
-     perso ? perso + ' champ(s) à compléter dans les mentions légales' : '');
+/* Le site annonce une activité professionnelle : adresse de déclaration et
+   SIRET sont alors obligatoires. Tant qu'ils manquent, la mention
+   « micro-entreprise » de la page est une déclaration fausse — plus exposante
+   qu'une absence de mention. */
+const manquePro = [];
+if (/\[ADRESSE DE DÉCLARATION\]/.test(html)) manquePro.push('adresse de déclaration');
+if (/\[14 CHIFFRES\]/.test(html))            manquePro.push('SIRET');
+warn('mentions légales professionnelles complètes', manquePro.length === 0,
+     manquePro.length ? 'manque : ' + manquePro.join(' et ') + ' — obligatoire avant toute vente' : '');
+ok('nom de l\'éditeur renseigné', !/\[PRÉNOM NOM\]/.test(html));
+ok('contact de l\'éditeur renseigné', !/\[ADRESSE E-MAIL\]/.test(html));
+ok('hébergeur déclaré = hébergeur réel', /GitHub, Inc\. — GitHub Pages/.test(html),
+   'le site a migré de Netlify vers GitHub Pages');
 warn('URL Open Graph réelle', !html.includes('VOTRE-DOMAINE'),
      html.includes('VOTRE-DOMAINE') ? 'https://VOTRE-DOMAINE encore présent' : '');
 warn('balise canonique présente', /rel="canonical"/.test(html));
