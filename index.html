@@ -839,7 +839,7 @@ footer p{font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.1em;text-
       </ul>
       <a class="btn btn-g" href="https://github.com/tlonchambon95-cpu/radical-performance-downloads/releases/latest/download/RadicalPerformance-Setup.exe">Télécharger — 95 Mo</a>
       <span class="dl-note">
-        Windows 10/11 64 bits · version 3.3.1<br>
+        Windows 10/11 64 bits · version 3.4.0<br>
         <b>Application non signée</b> — Windows affichera « Windows a protégé votre PC » :
         cliquer sur « Informations complémentaires » puis « Exécuter quand même ».
       </span>
@@ -977,15 +977,40 @@ const MODULES = [
    {id:'cpu-plan',v:'real',seg:'pc',ms:1.5,t:"Plan d'alimentation Performances ultimes",
     d:"Active le plan caché de Windows et le passe en actif. Supprime la latence de montée en fréquence.",
     why:"Mesurable sur les 1% low : le CPU ne redescend plus entre deux frames.",
-    cmd:`powercfg -duplicatescheme e9a42b02-d5df-448d-aa00-03f14749eb61
-$m = (powercfg /list | Select-String "Performances ultimes|Ultimate Performance" | Select-Object -First 1).ToString()
-if ($m -match "[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}") { powercfg /setactive $Matches[0] }`,
-    rev:`powercfg /setactive SCHEME_BALANCED`},
+    cmd:`# La recherche par NOM ne fonctionnait pas : sur un Windows francais le plan
+# duplique s'appelle "Performances optimales", pas "Performances ultimes".
+# La commande ne trouvait rien, n'activait donc jamais rien, et laissait un
+# plan orphelin de plus a chaque application.
+# powercfg -duplicatescheme renvoie le GUID du plan cree : on le lit dans sa
+# sortie, ce qui ne depend d'aucune langue.
+$sortie = powercfg -duplicatescheme e9a42b02-d5df-448d-aa00-03f14749eb61 2>$null
+$g = [regex]::Match(($sortie -join ' '), "[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}").Value
+if ($g) {
+    powercfg -changename $g "Radical Performance" "Plan de competition cree par Radical Performance" | Out-Null
+    powercfg /setactive $g
+    Write-Host "  Plan actif : Radical Performance"
+} else {
+    Write-Host "  Duplication impossible : le modele Performances ultimes est absent de ce Windows." -ForegroundColor Yellow
+}`,
+    rev:`powercfg /setactive SCHEME_BALANCED
+# Suppression des plans crees par l'outil, et d'eux seuls, pour qu'ils ne
+# s'accumulent pas application apres application.
+foreach ($l in (powercfg /list)) {
+    if ($l -match "Radical Performance") {
+        $gg = [regex]::Match($l, "[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}").Value
+        if ($gg) { powercfg /delete $gg 2>$null | Out-Null }
+    }
+}`},
 
    {id:'cpu-park',v:'real',seg:'pc',ms:2.0,t:"Désactiver le parking de cœurs",
     d:"Force 100 % des cœurs actifs et l'état minimal du processeur à 100 % sur secteur.",
     why:"Le déparking d'un cœur coûte des centaines de µs. Sur un tir en peek, ça se voit.",
-    cmd:`powercfg /setacvalueindex SCHEME_CURRENT SUB_PROCESSOR PROCTHROTTLEMIN 100
+    cmd:`# CPMINCORES et IDLEDISABLE sont MASQUES par defaut sur Windows 11 :
+# powercfg acceptait l'ecriture et renvoyait un succes, mais la valeur restait
+# inappliquee et illisible. Il faut d'abord rendre ces parametres visibles.
+powercfg -attributes SUB_PROCESSOR 0cc5b647-c1df-4637-891a-dec35c318583 -ATTRIB_HIDE
+powercfg -attributes SUB_PROCESSOR 5d76a2ca-e8c0-402f-a133-2158492d58ad -ATTRIB_HIDE
+powercfg /setacvalueindex SCHEME_CURRENT SUB_PROCESSOR PROCTHROTTLEMIN 100
 powercfg /setacvalueindex SCHEME_CURRENT SUB_PROCESSOR CPMINCORES 100
 powercfg /setacvalueindex SCHEME_CURRENT SUB_PROCESSOR IDLEDISABLE 1
 powercfg /setactive SCHEME_CURRENT`,
@@ -1169,26 +1194,47 @@ Set-ItemProperty "HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multim
 $idx = (Get-NetRoute -DestinationPrefix "0.0.0.0/0" -ErrorAction SilentlyContinue | Sort-Object RouteMetric, ifMetric | Select-Object -First 1).InterfaceIndex
 $nic = if ($idx) { Get-NetAdapter -InterfaceIndex $idx -ErrorAction SilentlyContinue } else { $null }
 if ($nic) {
-    $props = "Interrupt Moderation","Energy-Efficient Ethernet","Green Ethernet","Flow Control","Ultra Low Power Mode"
-    foreach ($p in $props) {
-        Set-NetAdapterAdvancedProperty -Name $nic.Name -DisplayName $p -DisplayValue "Disabled" -ErrorAction SilentlyContinue
+    # On cible les MOTS-CLES DE REGISTRE, pas les noms affiches : ces derniers
+    # sont traduits par le pilote. Sur un Windows francais la carte annonce
+    # "Ethernet econome en energie (EEE)" et non "Energy-Efficient Ethernet" :
+    # l'ancienne version ne trouvait donc aucune propriete et ne faisait rien.
+    # La liste couvre Intel, Realtek et les mots-cles NDIS standards ; ce qui
+    # est absent d'une carte est simplement ignore.
+    $cles = "*InterruptModeration","*FlowControl","EEELinkAdvertisement","ULPMode",
+            "AutoPowerSaveModeEnabled","ReduceSpeedOnPowerDown","EnableGreenEthernet","AdvancedEEE"
+    $faits = @()
+    foreach ($k in $cles) {
+        $p = Get-NetAdapterAdvancedProperty -Name $nic.Name -RegistryKeyword $k -ErrorAction SilentlyContinue
+        if ($p) {
+            Set-NetAdapterAdvancedProperty -Name $nic.Name -RegistryKeyword $k -RegistryValue 0 -NoRestart -ErrorAction SilentlyContinue
+            $faits += $k
+        }
     }
-    Disable-NetAdapterPowerManagement -Name $nic.Name -ErrorAction SilentlyContinue
-    Write-Host "  Carte traitee : $($nic.Name)"
+    Disable-NetAdapterPowerManagement -Name $nic.Name -NoRestart -ErrorAction SilentlyContinue
+    # Un seul redemarrage de la carte a la fin plutot qu'un par propriete
+    Restart-NetAdapter -Name $nic.Name -ErrorAction SilentlyContinue
+    Write-Host "  Carte traitee : $($nic.Name) - $($faits.Count) propriete(s) : $($faits -join ', ')"
 }`,
     rev:`$idx = (Get-NetRoute -DestinationPrefix "0.0.0.0/0" -ErrorAction SilentlyContinue | Sort-Object RouteMetric, ifMetric | Select-Object -First 1).InterfaceIndex
 $nic = if ($idx) { Get-NetAdapter -InterfaceIndex $idx -ErrorAction SilentlyContinue } else { $null }
 if ($nic) {
-    # On ne repose que les cinq proprietes touchees, une par une, plutot que
+    # On ne repose que les proprietes touchees, une par une, plutot que
     # "-DisplayName *" qui remettait a zero TOUTES les proprietes avancees de
     # la carte — y compris celles reglees par l'utilisateur ou son integrateur.
-    $props = "Interrupt Moderation","Energy-Efficient Ethernet","Green Ethernet","Flow Control","Ultra Low Power Mode"
-    foreach ($p in $props) {
-        Reset-NetAdapterAdvancedProperty -Name $nic.Name -DisplayName $p -ErrorAction SilentlyContinue
+    $cles = "*InterruptModeration","*FlowControl","EEELinkAdvertisement","ULPMode",
+            "AutoPowerSaveModeEnabled","ReduceSpeedOnPowerDown","EnableGreenEthernet","AdvancedEEE"
+    foreach ($k in $cles) {
+        # Reset-NetAdapterAdvancedProperty n'accepte PAS -RegistryKeyword, seulement
+        # -DisplayName : l'appel echouait donc en silence et l'annulation ne remettait
+        # rien. On repose la valeur par defaut que le pilote declare lui-meme, ce qui
+        # est a la fois precis et independant de la langue.
+        $p = Get-NetAdapterAdvancedProperty -Name $nic.Name -RegistryKeyword $k -ErrorAction SilentlyContinue
+        if ($p -and $p.DefaultRegistryValue) {
+            Set-NetAdapterAdvancedProperty -Name $nic.Name -RegistryKeyword $k -RegistryValue $p.DefaultRegistryValue[0] -NoRestart -ErrorAction SilentlyContinue
+        }
     }
-    # Oublie jusqu'ici : la commande coupait la gestion d'alimentation de la
-    # carte, l'annulation ne la remettait jamais.
-    Enable-NetAdapterPowerManagement -Name $nic.Name -ErrorAction SilentlyContinue
+    Enable-NetAdapterPowerManagement -Name $nic.Name -NoRestart -ErrorAction SilentlyContinue
+    Restart-NetAdapter -Name $nic.Name -ErrorAction SilentlyContinue
 }`},
 
    {id:'net-tcp',v:'real',seg:'net',ms:0.8,t:"Remise à zéro de la pile TCP",

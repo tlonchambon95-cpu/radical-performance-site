@@ -27,13 +27,15 @@ const NEEDS_ADMIN = new Set(['cpu-tick', 'win-vbs']);
 const PROBES = {
 
   /* ---------- Processeur ---------- */
-  // Le plan « Performances ultimes » est dupliqué à l'application : son GUID
-  // change d'une machine à l'autre. On teste donc le nom du plan actif.
-  'cpu-plan': `[bool](((powercfg /getactivescheme) -join ' ') -match 'Performances ultimes|Ultimate Performance')`,
+  /* Le plan est duplique puis RENOMME « Radical Performance » par la commande.
+     On teste ce nom, que l'outil maitrise, et non « Performances ultimes » :
+     ce dernier est traduit par Windows et ne correspondait a rien en francais. */
+  'cpu-plan': `[bool](((powercfg /getactivescheme) -join ' ') -match 'Radical Performance')`,
 
-  // Parking désactivé = minimum de cœurs à 100 % et throttle minimum à 100 %
-  'cpu-park': `(AcIdx 'SUB_PROCESSOR' '0cc5b647-c1df-4637-891a-dec35c318583') -eq 100 -and
-               (AcIdx 'SUB_PROCESSOR' '893dee8e-2bef-41e0-89c6-b55d0929964c') -eq 100`,
+  /* PROCTHROTTLEMIN seulement : CPMINCORES est masque par defaut sur Windows 11
+     et powercfg /query ne renvoie alors aucune valeur. Sonder un parametre
+     invisible produisait « illisible » au lieu d'un verdict exploitable. */
+  'cpu-park': `(AcIdx 'SUB_PROCESSOR' '893dee8e-2bef-41e0-89c6-b55d0929964c') -eq 100`,
 
   'cpu-prio': `(RegVal 'HKLM:\\SYSTEM\\CurrentControlSet\\Control\\PriorityControl' 'Win32PrioritySeparation') -eq 38`,
 
@@ -66,16 +68,25 @@ const PROBES = {
   'net-throttle': `$k = 'HKLM:\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile'
                    (RegVal $k 'NetworkThrottlingIndex') -eq 4294967295 -and (RegVal $k 'SystemResponsiveness') -eq 10`,
 
-  // On teste la propriété la plus représentative du lot désactivé par le réglage
+  /* Mot-cle de registre et non nom affiche : le pilote traduit ses libelles
+     (« Gestion des interruptions » en francais), la sonde ne trouvait donc
+     jamais la propriete et repondait « illisible ». *InterruptModeration est
+     un mot-cle NDIS standard, present sur toutes les cartes, et c'est celui
+     qui pese reellement sur la latence. */
   'net-nic': `$nic = ActiveNic
               if (-not $nic) { $null } else {
-                $v = @(Get-NetAdapterAdvancedProperty -Name $nic.Name -ErrorAction SilentlyContinue |
-                       Where-Object { $_.DisplayName -match 'Energy-Efficient Ethernet|Green Ethernet|Efficient Ethernet' })
-                if ($v.Count -eq 0) { $null } else { [bool](@($v | Where-Object { $_.DisplayValue -match 'Disabled|Désactivé' }).Count -eq $v.Count) }
+                $p = Get-NetAdapterAdvancedProperty -Name $nic.Name -RegistryKeyword '*InterruptModeration' -ErrorAction SilentlyContinue
+                if (-not $p) { $null } else { "$($p.RegistryValue)" -eq '0' }
               }`,
 
+  /* EcnCapability est la SEULE valeur qui differe entre la commande (enabled)
+     et l'annulation (disabled) : sans elle, la sonde repondait vrai dans les
+     deux etats et ne pouvait rien distinguer. Defaut trouve par selftest.js. */
   'net-tcp': `$t = Get-NetTCPSetting -SettingName Internet -ErrorAction SilentlyContinue
-              if (-not $t) { $null } else { $t.AutoTuningLevelLocal -eq 'Normal' -and $t.CongestionProvider -eq 'CUBIC' }`,
+              if (-not $t) { $null } else {
+                $t.AutoTuningLevelLocal -eq 'Normal' -and $t.CongestionProvider -eq 'CUBIC' -and
+                "$($t.EcnCapability)" -eq 'Enabled'
+              }`,
 
   // Le réglage impose 1.1.1.1 EN PREMIER. Un simple « contient » répondrait
   // vrai alors que le DNS de la box reste primaire et sert toutes les requêtes.
@@ -181,4 +192,7 @@ function buildProbeScript(){
   return s;
 }
 
-module.exports = { PROBES, NEEDS_ADMIN, buildProbeScript };
+/* PREAMBLE est exporté : selftest.js en a besoin pour que les sondes disposent
+   de RegVal, AcIdx et ActiveNic. Sans lui, toute sonde utilisant une fonction
+   d'aide échoue en silence et se déclare « illisible ». */
+module.exports = { PROBES, NEEDS_ADMIN, PREAMBLE, buildProbeScript };
