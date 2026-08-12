@@ -839,7 +839,7 @@ footer p{font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.1em;text-
       </ul>
       <a class="btn btn-g" href="https://github.com/tlonchambon95-cpu/radical-performance-downloads/releases/latest/download/RadicalPerformance-Setup.exe">Télécharger — 95 Mo</a>
       <span class="dl-note">
-        Windows 10/11 64 bits · version 2.8.0<br>
+        Windows 10/11 64 bits · version 2.9.0<br>
         <b>Application non signée</b> — Windows affichera « Windows a protégé votre PC » :
         cliquer sur « Informations complémentaires » puis « Exécuter quand même ».
       </span>
@@ -1379,7 +1379,9 @@ const byId = id => allTweaks().find(t => t.id === id);
 const esc  = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 const pad  = n => String(n).padStart(2,'0');
 const CIRC = 2 * Math.PI * 126;
-const BASE_TOTAL = SEGMENTS.reduce((a,s)=>a+s.base,0);
+/* let et non const : en mode natif, le segment « Écran » est recalculé sur la
+   fréquence réellement lue, ce qui change le total de référence. */
+let BASE_TOTAL = SEGMENTS.reduce((a,s)=>a+s.base,0);
 
 /* ================= JAUGE & SEGMENTS ================= */
 function buildSegCard(){
@@ -2142,7 +2144,14 @@ document.getElementById('viewMethod').innerHTML = `
       <li><b>Non vérifiable</b> — la lecture a échoué, souvent faute de droits administrateur. Afficher « non appliqué » ici serait un mensonge.</li>
     </ul>
     <p style="margin-top:14px">Les réglages <b>manuels</b> (BIOS, panneau du pilote, options en jeu) ne sont pas applicables par un programme : ils sont documentés, jamais automatisés. Les <b>mythes</b> sont affichés pour être démontés, jamais proposés.</p>
-    <p>La jauge de latence est un <b>modèle</b>, calibré sur une chaîne de référence. Elle sert à hiérarchiser les gains entre eux, pas à annoncer une milliseconde absolue. Elle ne compte que les réglages réellement en place.</p>
+    <p>La jauge de latence mêle <b>une mesure et trois estimations</b>, et elle le dit :</p>
+    <ul>
+      <li><b>Écran — mesuré.</b> La fréquence est lue sur la machine, et la durée d'une image en découle exactement : 1000 divisé par la fréquence. Aucune supposition.</li>
+      <li><b>Souris → USB — estimé.</b> Windows n'expose pas de façon fiable la fréquence d'interrogation du périphérique.</li>
+      <li><b>Rendu + file GPU — estimé.</b> Dépend du jeu, de la scène et du nombre d'images par seconde du moment.</li>
+      <li><b>Réseau — estimé.</b> En attente d'une vraie mesure de ping.</li>
+    </ul>
+    <p style="margin-top:12px">Elle ne compte que les réglages <b>réellement en place</b>, jamais ceux qui sont simplement cochés.</p>
   </div>`;
 
 /* ================= NAVIGATION ================= */
@@ -2300,6 +2309,17 @@ function renderDash(){
         <span class="chip"><span class="pulse"></span>En direct — budget de latence estimé</span>
         <h2>Tableau de bord</h2>
         <p>Chaque milliseconde du clic au pixel, estimée à partir des réglages <b>réellement appliqués</b> sur cette machine — pas une case cochée, un état vérifié.</p>
+        ${ecranMesure ? `
+        <p style="margin-top:11px;font-size:13.5px">
+          <b>Écran mesuré : ${ecranMesure.hz} Hz</b> — une image dure ${String(ecranMesure.balayage).replace('.', ',')} ms.
+          Le segment « Écran » est calculé sur cette valeur, pas sur un modèle.
+          ${ecranMesure.hz < 100 ? `<b style="color:var(--tradeoff)">À ${ecranMesure.hz} Hz, ton écran est de loin ton premier poste de latence :
+          il pèse plus lourd que les 51 réglages réunis.</b>` : ''}
+        </p>
+        <p style="margin-top:7px;font-size:12.5px;color:var(--dim)">
+          Les trois autres segments restent estimés : la fréquence d'interrogation de la souris n'est
+          pas exposée de façon fiable par Windows, le rendu dépend du jeu, et le réseau attend une
+          vraie mesure de ping.</p>` : ''}
       </div>
       <div class="dash-gauge" id="gaugeSlot"></div>
     </div>
@@ -2451,6 +2471,37 @@ async function initUpdates(){
   myVersion = v.version;
   setVersionLabel(null);
   RP.updateCheck();
+}
+
+/* ================= JAUGE CALCULÉE SUR LE MATÉRIEL RÉEL =================
+   Le site raisonne sur une chaîne de référence : écran 240 Hz, RTT 30 ms.
+   C'est honnête pour une vitrine, ça ne l'est plus dans un outil qui a lu la
+   machine. La durée d'une image vaut exactement 1000 / fréquence : 4,17 ms à
+   240 Hz, 16,67 ms à 60 Hz. Un joueur en 60 Hz doit voir que son écran est
+   son premier poste de latence, très loin devant les 51 réglages.
+
+   Seul le segment « Écran » est recalculé ici : c'est le seul dont on connaît
+   la mesure exacte. L'entrée souris dépend de la fréquence d'interrogation du
+   périphérique, que Windows n'expose pas de façon fiable ; le rendu dépend du
+   jeu ; le réseau dépendra d'une mesure de ping, qui viendra ensuite. Ces
+   trois-là restent donc des estimations, et le tableau de bord le dit. */
+const REPONSE_DALLE = 4.8;   // temps de réponse moyen d'une dalle, hors balayage
+let ecranMesure = null;
+
+function ajusterSegments(m){
+  if (!m || !m.hz) return false;
+  const seg = SEGMENTS.find(s => s.id === 'display');
+  if (!seg) return false;
+  const balayage = 1000 / m.hz;
+  seg.base = +(balayage + REPONSE_DALLE).toFixed(1);
+  seg.name = 'Écran (' + m.hz + ' Hz mesuré)';
+  BASE_TOTAL = SEGMENTS.reduce((a, s) => a + s.base, 0);
+  ecranMesure = { hz: m.hz, balayage: +balayage.toFixed(1), total: seg.base };
+
+  // le libellé a été écrit une fois par buildSegCard() : on le remet à jour
+  const v = document.querySelector('[data-cv="display"]');
+  if (v && v.parentElement) v.parentElement.firstElementChild.textContent = seg.name;
+  return true;
 }
 
 /* ================= MODULE PROCESSUS =================
@@ -2881,7 +2932,7 @@ async function refresh(){
     ]);
     if (st && !st.__err && st.state){ STATE = st.state; ADMIN = st.admin; }
     else if (st && st.__err) showError('Lecture de l’état impossible', st.__err);
-    if (mach) MACHINE = mach;
+    if (mach){ MACHINE = mach; ajusterSegments(MACHINE); }
   } catch (e) {
     showError('Erreur au démarrage', e && e.message);
   }
