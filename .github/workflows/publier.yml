@@ -51,6 +51,18 @@ jobs:
             exit 1
           }
 
+      # Le binaire Electron (~120 Mo) est retelecharge a chaque execution et son
+      # echec fait tomber la construction. Le mettre en cache supprime la cause
+      # la plus probable des pannes intermittentes, et raccourcit le temps total.
+      - name: Cache Electron
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~\AppData\Local\electron\Cache
+            ~\AppData\Local\electron-builder\Cache
+          key: electron-${{ runner.os }}-${{ hashFiles('desktop/package-lock.json') }}
+          restore-keys: electron-${{ runner.os }}-
+
       - name: Installer les dépendances
         working-directory: desktop
         run: npm ci --no-audit --no-fund
@@ -92,9 +104,23 @@ jobs:
       # d'oublier un fichier dans une liste ecrite a la main.
       - name: Construire et publier
         working-directory: desktop
+        shell: pwsh
         env:
           GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
-        run: npm run dist -- --publish always
+        run: |
+          # Trois tentatives : les echecs observes etaient intermittents et
+          # survenaient toujours au meme endroit, sans que le jeton soit en cause.
+          $ok = $false
+          for ($i = 1; $i -le 3 -and -not $ok; $i++) {
+            Write-Host "===== tentative $i / 3 ====="
+            npm run dist -- --publish always
+            if ($LASTEXITCODE -eq 0) { $ok = $true }
+            else {
+              Write-Host "echec (code $LASTEXITCODE)"
+              if ($i -lt 3) { Write-Host "nouvelle tentative dans 20 s..."; Start-Sleep -Seconds 20 }
+            }
+          }
+          if (-not $ok) { Write-Error "La construction a echoue apres 3 tentatives."; exit 1 }
 
       - name: Vérifier la publication
         shell: pwsh
