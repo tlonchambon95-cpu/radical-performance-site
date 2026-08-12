@@ -248,6 +248,41 @@ async function releve(){
 
 ipcMain.handle('rp:releve', async () => { try { return await releve(); } catch (e) { return { __err: e.message }; } });
 
+/* ---- Rapport client en PDF ----
+   Le rendu passe par une fenêtre hors écran plutôt que par la fenêtre
+   principale : imprimer celle-ci embarquerait la barre latérale, la barre
+   d'état et le thème sombre. Le rapport a sa propre mise en page, pensée
+   pour le papier. */
+ipcMain.handle('rp:exporterPdf', async (e, { html, nomSuggere }) => {
+  let fenetre = null;
+  try {
+    const { filePath, canceled } = await dialog.showSaveDialog(win, {
+      title: 'Enregistrer le rapport',
+      defaultPath: path.join(app.getPath('documents'), nomSuggere || 'rapport-radical-performance.pdf'),
+      filters: [{ name: 'PDF', extensions: ['pdf'] }]
+    });
+    if (canceled || !filePath) return { ok: false, cancelled: true };
+
+    fenetre = new BrowserWindow({ show: false, webPreferences: { offscreen: true } });
+    await fenetre.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(html));
+    // laisse la mise en page se stabiliser avant la capture
+    await new Promise(r => setTimeout(r, 400));
+
+    const pdf = await fenetre.webContents.printToPDF({
+      printBackground: true,
+      pageSize: 'A4',
+      margins: { top: 0.5, bottom: 0.5, left: 0.5, right: 0.5 }
+    });
+    fsp.writeFileSync(filePath, pdf);
+    shell.openPath(filePath);
+    return { ok: true, chemin: filePath };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  } finally {
+    if (fenetre && !fenetre.isDestroyed()) fenetre.destroy();
+  }
+});
+
 ipcMain.handle('rp:repere', async (e, action) => {
   try {
     if (action === 'lire'){

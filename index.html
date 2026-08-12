@@ -839,7 +839,7 @@ footer p{font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.1em;text-
       </ul>
       <a class="btn btn-g" href="https://github.com/tlonchambon95-cpu/radical-performance-downloads/releases/latest/download/RadicalPerformance-Setup.exe">Télécharger — 95 Mo</a>
       <span class="dl-note">
-        Windows 10/11 64 bits · version 3.1.0<br>
+        Windows 10/11 64 bits · version 3.2.0<br>
         <b>Application non signée</b> — Windows affichera « Windows a protégé votre PC » :
         cliquer sur « Informations complémentaires » puis « Exécuter quand même ».
       </span>
@@ -3057,6 +3057,7 @@ function renderRapport(){
       </div>
       <div class="acts">
         <button class="btn btn-g" id="btnApres">${APRES ? 'Remesurer' : 'Mesurer maintenant'}</button>
+        <button class="btn btn-ghost" id="btnPdf">Rapport client (PDF)</button>
         <button class="btn btn-ghost" id="btnResetRepere">Nouveau point de référence</button>
       </div>
     </div>
@@ -3087,6 +3088,16 @@ function renderRapport(){
     APRES = await RP.releve();
     renderRapport();
   };
+  document.getElementById('btnPdf').onclick = async e => {
+    const b = e.target;
+    b.disabled = true; b.textContent = 'Génération…';
+    const nom = 'rapport-radical-performance-' + new Date().toISOString().slice(0, 10) + '.pdf';
+    const r = await RP.exporterPdf(construireRapportHTML(), nom);
+    b.disabled = false; b.textContent = 'Rapport client (PDF)';
+    if (r && r.ok) toast('Rapport enregistré et ouvert');
+    else if (r && r.cancelled) toast('Enregistrement annulé');
+    else toast('Échec : ' + ((r && r.error) || 'raison inconnue'));
+  };
   document.getElementById('btnResetRepere').onclick = async () => {
     const ok = await RP.confirm({
       title: 'Nouveau point de référence',
@@ -3101,6 +3112,141 @@ function renderRapport(){
     renderRapport();
   };
 }
+
+/* ================= RAPPORT CLIENT =================
+   Document destiné au papier : fond blanc, hiérarchie sobre, et surtout la
+   même honnêteté que l'application. Chaque chiffre porte sa nature, mesurée
+   ou déduite, et les actions restant à faire par le client sont listées —
+   un rapport qui ne montrerait que le travail accompli serait un argumentaire,
+   pas un compte rendu. */
+function construireRapportHTML(){
+  const m = MACHINE || {};
+  const h = HW || {};
+  const bAvant = budgetDe(REPERE), bApres = budgetDe(APRES || REPERE);
+  const applique = allTweaks().filter(t => STATE[t.id] === true);
+  const manuels  = allTweaks().filter(t => t.manual && t.v !== 'myth');
+  const nonFaits = allTweaks().filter(t => t.cmd && STATE[t.id] === false && (t.v === 'real' || t.v === 'marginal'));
+  const d = new Date();
+  const e = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const nb = x => x == null ? '—' : String(x).replace('.', ',');
+
+  const compare = (lbl, a, b, u) => {
+    if (a == null && b == null) return '';
+    const chg = (a != null && b != null && a !== b);
+    return `<tr><td>${lbl}</td><td class="n">${nb(a)}${u}</td><td class="n">${nb(b)}${u}</td>
+      <td class="n">${chg ? (b - a > 0 ? '+' : '−') + nb(Math.abs(+(b - a).toFixed(1))) + u : '—'}</td></tr>`;
+  };
+
+  return `<!doctype html><html lang="fr"><head><meta charset="utf-8">
+<title>Rapport d'optimisation</title>
+<style>
+  @page { size: A4; }
+  body { font-family: Georgia, 'Times New Roman', serif; color:#16181d; margin:0; padding:0 6mm; line-height:1.5; }
+  h1 { font-size:23pt; margin:0 0 2mm; letter-spacing:-.5pt; }
+  h2 { font-size:12pt; margin:9mm 0 3mm; padding-bottom:1.5mm; border-bottom:1.5pt solid #C8102E;
+       text-transform:uppercase; letter-spacing:1.2pt; font-family:Arial,sans-serif; }
+  .tete { border-bottom:3pt solid #C8102E; padding-bottom:4mm; margin-bottom:2mm; }
+  .tete .sous { color:#63676e; font-size:10pt; }
+  table { width:100%; border-collapse:collapse; font-size:9.5pt; margin-bottom:2mm; }
+  th { text-align:left; font-family:Arial,sans-serif; font-size:8pt; text-transform:uppercase;
+       letter-spacing:.8pt; color:#63676e; border-bottom:.75pt solid #c9ccd1; padding:1.5mm 2mm; }
+  td { padding:1.5mm 2mm; border-bottom:.5pt solid #e6e8ec; vertical-align:top; }
+  td.n { text-align:right; font-family:'Courier New',monospace; white-space:nowrap; }
+  .fiche td:first-child { color:#63676e; width:38%; }
+  .note { font-size:8.5pt; color:#63676e; font-style:italic; margin-top:2mm; }
+  .verdict { font-family:Arial,sans-serif; font-size:7.5pt; text-transform:uppercase; letter-spacing:.6pt;
+             padding:.4mm 1.6mm; border:.5pt solid currentColor; border-radius:1mm; white-space:nowrap; }
+  .real{color:#B00718}.marginal{color:#4a5560}.tradeoff{color:#95610a}
+  .avert { border-left:2.5pt solid #95610a; background:#fdf7ec; padding:3mm 4mm; font-size:9.5pt; margin:3mm 0; }
+  .pied { margin-top:9mm; padding-top:3mm; border-top:.75pt solid #c9ccd1; font-size:8pt; color:#63676e; }
+  ul { margin:1mm 0 0 5mm; padding:0; font-size:9.5pt; }
+  li { margin-bottom:1mm; }
+</style></head><body>
+
+<div class="tete">
+  <h1>Rapport d'optimisation</h1>
+  <div class="sous">Radical Performance ${e(RP.version ? '' : '')} · Établi le ${d.toLocaleDateString('fr-FR')} à ${d.toLocaleTimeString('fr-FR')}</div>
+</div>
+
+<h2>Machine</h2>
+<table class="fiche">
+  <tr><td>Processeur</td><td>${e(m.cpu || h.cpu)} — ${e(m.cores)} cœurs / ${e(m.threads)} threads</td></tr>
+  <tr><td>Mémoire</td><td>${e(m.ramGo)} Go${h.ramVitesse ? ` — ${e(h.ramVitesseNom)} MT/s appliqués sur ${e(h.ramVitesse)} notés` : ''}</td></tr>
+  <tr><td>Carte graphique</td><td>${e(m.gpu)}</td></tr>
+  <tr><td>Écran</td><td>${e(m.largeur)}×${e(m.hauteur)} — <strong>${e(m.hz)} Hz</strong></td></tr>
+  <tr><td>Carte mère</td><td>${e(h.carteFabricant)} ${e(h.carteModele)} — BIOS ${e(h.biosVersion)}</td></tr>
+  <tr><td>Système</td><td>${e((m.os || '').replace(/^Microsoft /, ''))} build ${e(m.build)}</td></tr>
+  <tr><td>Plan d'alimentation</td><td>${e(m.planNom)}</td></tr>
+</table>
+
+<h2>Mesures relevées sur la machine</h2>
+<table>
+  <tr><th>Indicateur</th><th style="text-align:right">Avant</th><th style="text-align:right">Après</th><th style="text-align:right">Écart</th></tr>
+  ${compare('Ping — trajet aller-retour', REPERE && REPERE.ping && REPERE.ping.rtt, APRES && APRES.ping && APRES.ping.rtt, ' ms')}
+  ${compare('Gigue — variation entre paquets', REPERE && REPERE.ping && REPERE.ping.gigue, APRES && APRES.ping && APRES.ping.gigue, ' ms')}
+  ${compare('Perte de paquets', REPERE && REPERE.ping && REPERE.ping.perte, APRES && APRES.ping && APRES.ping.perte, ' %')}
+  ${compare('Processus en cours', REPERE && REPERE.processus, APRES && APRES.processus, '')}
+  ${compare('Programmes au démarrage', REPERE && REPERE.demarrage, APRES && APRES.demarrage, '')}
+</table>
+<p class="note">Ces valeurs sont chronométrées sur la machine. Le ping est mesuré vers des résolveurs
+publics : il donne le plancher de la connexion, non la latence vers un serveur de partie.</p>
+
+<h2>Budget de latence — déduit des réglages vérifiés</h2>
+<table>
+  <tr><th>Segment</th><th style="text-align:right">Avant</th><th style="text-align:right">Après</th><th style="text-align:right">Nature</th></tr>
+  ${SEGMENTS.map(s => `<tr><td>${e(s.name)}</td>
+    <td class="n">${bAvant ? nb(+bAvant.segs[s.id].toFixed(1)) : '—'} ms</td>
+    <td class="n">${bApres ? nb(+bApres.segs[s.id].toFixed(1)) : '—'} ms</td>
+    <td class="n" style="font-family:Arial;font-size:8pt">${s.id === 'display' || s.id === 'net' ? 'mesuré' : 'estimé'}</td></tr>`).join('')}
+  <tr><td><strong>Total</strong></td><td class="n"><strong>${bAvant ? nb(bAvant.total) : '—'} ms</strong></td>
+      <td class="n"><strong>${bApres ? nb(bApres.total) : '—'} ms</strong></td><td></td></tr>
+</table>
+<p class="note"><strong>Ce budget n'est pas chronométré.</strong> Il est déduit des réglages dont la
+présence a été vérifiée sur la machine, avec l'écran et le réseau mesurés. L'entrée souris et le rendu
+graphique restent des estimations : Windows n'expose pas la fréquence d'interrogation du périphérique,
+et le rendu dépend du jeu et de la scène.</p>
+
+${m.hz && m.hz < 100 ? `<div class="avert"><strong>Écran à ${e(m.hz)} Hz.</strong> Une image y dure
+${nb(+(1000 / m.hz).toFixed(1))} ms, ce qui en fait le premier poste de latence de cette machine —
+devant l'ensemble des réglages logiciels. Le passage à un écran 144 Hz ou plus apporterait un gain
+supérieur à tout ce qui figure dans ce rapport.</div>` : ''}
+
+${h.ramVitesse && h.ramVitesseNom && h.ramVitesseNom < h.ramVitesse ? `<div class="avert">
+<strong>Mémoire sous-cadencée.</strong> Les barrettes sont notées ${e(h.ramVitesse)} MT/s et tournent à
+${e(h.ramVitesseNom)} MT/s : le profil XMP/EXPO n'est pas actif. Ce réglage se fait au BIOS, aucun
+logiciel ne peut l'appliquer.</div>` : ''}
+
+<h2>Réglages appliqués — ${applique.length}</h2>
+${applique.length ? `<table>${applique.map(t => `<tr>
+  <td>${e(t.t)}</td>
+  <td style="width:26%"><span class="verdict ${t.v}">${e(VERDICT[t.v].label)}</span></td>
+  <td class="n">${t.ms ? '−' + nb(t.ms) + ' ms' : ''}</td></tr>`).join('')}</table>`
+: '<p>Aucun réglage automatique n\'est actuellement en place.</p>'}
+<p class="note">Chaque réglage dispose d'une commande de retour arrière symétrique. Un point de
+restauration Windows est créé avant toute modification.</p>
+
+${nonFaits.length ? `<h2>Réglages sûrs non appliqués — ${nonFaits.length}</h2>
+<ul>${nonFaits.map(t => `<li>${e(t.t)}</li>`).join('')}</ul>
+<p class="note">Ces réglages sont classés sans risque et restent disponibles.</p>` : ''}
+
+<h2>À faire manuellement — ${manuels.length}</h2>
+<p style="font-size:9.5pt">Aucun logiciel ne peut appliquer ces réglages : ils relèvent du BIOS, du
+panneau du pilote graphique ou des options en jeu.</p>
+<ul>${manuels.map(t => `<li>${e(t.t)}</li>`).join('')}</ul>
+
+<div class="pied">
+  Les valeurs de latence proviennent d'un modèle partiellement mesuré et ne constituent ni une garantie
+  de gain, ni une mesure chronométrée du temps du clic au pixel. Chaque modification effectuée est
+  réversible depuis l'application. Rapport généré automatiquement par Radical Performance.
+</div>
+</body></html>`;
+}
+
+/* Exposé volontairement : tout le bloc natif vit dans une fermeture, et le
+   rapport ne serait sinon vérifiable qu'en cliquant sur le bouton — donc en
+   passant par une boîte de dialogue native, impossible à automatiser. Cette
+   référence permet de contrôler le document produit sans rien enregistrer. */
+window.__rapportHTML = construireRapportHTML;
 
 function majCompteurRepere(){
   const c = document.getElementById('cntRepere');

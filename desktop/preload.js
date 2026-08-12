@@ -42,6 +42,9 @@ contextBridge.exposeInMainWorld('RP', {
   /** Point de référence conservé sur disque : 'poser' | 'lire' | 'effacer'. */
   repere: (action = 'poser') => ipcRenderer.invoke('rp:repere', action),
 
+  /** Rend le HTML fourni en PDF, propose où l'enregistrer, puis l'ouvre. */
+  exporterPdf: (html, nomSuggere) => ipcRenderer.invoke('rp:exporterPdf', { html, nomSuggere }),
+
   /** Catalogue des services allégeables et leur état réel. */
   services: () => ipcRenderer.invoke('rp:services'),
 
