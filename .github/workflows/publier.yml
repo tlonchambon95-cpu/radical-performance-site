@@ -102,18 +102,18 @@ jobs:
       # dans package.json) et sait exactement quels fichiers joindre, y compris
       # latest.yml qu'il vient de generer. Une etape en moins, et aucun risque
       # d'oublier un fichier dans une liste ecrite a la main.
-      - name: Construire et publier
+      # Construction SEULE. electron-builder ne publie plus lui-meme : sur la
+      # v3.3.0 il a cree la publication en perdant le .blockmap en silence, ce
+      # qui aurait fait retelecharger 95 Mo complets a chaque client. L'envoi
+      # est desormais explicite, fichier par fichier, et verifiable.
+      - name: Construire l'installeur
         working-directory: desktop
         shell: pwsh
-        env:
-          GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
         run: |
-          # Trois tentatives : les echecs observes etaient intermittents et
-          # survenaient toujours au meme endroit, sans que le jeton soit en cause.
           $ok = $false
           for ($i = 1; $i -le 3 -and -not $ok; $i++) {
             Write-Host "===== tentative $i / 3 ====="
-            npm run dist -- --publish always
+            npm run dist -- --publish never
             if ($LASTEXITCODE -eq 0) { $ok = $true }
             else {
               Write-Host "echec (code $LASTEXITCODE)"
@@ -122,11 +122,42 @@ jobs:
           }
           if (-not $ok) { Write-Error "La construction a echoue apres 3 tentatives."; exit 1 }
 
-      - name: Vérifier la publication
+      - name: Vérifier les trois fichiers avant envoi
         shell: pwsh
         run: |
+          $manque = @()
+          foreach ($f in 'RadicalPerformance-Setup.exe','latest.yml','RadicalPerformance-Setup.exe.blockmap'){
+            if (Test-Path "desktop/dist/$f") {
+              "{0,-42} {1} Mo" -f $f, [math]::Round((Get-Item "desktop/dist/$f").Length/1MB, 2)
+            } else { $manque += $f }
+          }
+          if ($manque.Count) { Write-Error ("Absent de la construction : " + ($manque -join ', ')); exit 1 }
+
+      - name: Publier sur radical-performance-downloads
+        uses: softprops/action-gh-release@v2
+        with:
+          repository: tlonchambon95-cpu/radical-performance-downloads
+          token: ${{ secrets.RELEASE_TOKEN }}
+          tag_name: ${{ github.ref_name }}
+          name: Radical Performance ${{ github.ref_name }}
+          draft: false
+          prerelease: false
+          fail_on_unmatched_files: true
+          files: |
+            desktop/dist/RadicalPerformance-Setup.exe
+            desktop/dist/latest.yml
+            desktop/dist/RadicalPerformance-Setup.exe.blockmap
+
+      - name: Vérifier la publication
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+        run: |
           $tag = "${{ github.ref_name }}"
-          $h = @{ 'User-Agent' = 'rp'; 'Accept' = 'application/vnd.github+json' }
+          # Requete authentifiee : sans jeton, l'API limite a 60 appels par heure
+          # et par adresse, et les coureurs GitHub partagent leurs adresses.
+          $h = @{ 'User-Agent' = 'rp'; 'Accept' = 'application/vnd.github+json'; 'Authorization' = "Bearer $env:GH_TOKEN" }
+          Start-Sleep -Seconds 5   # laisse la publication se propager
           $r = Invoke-RestMethod "https://api.github.com/repos/tlonchambon95-cpu/radical-performance-downloads/releases/tags/$tag" -Headers $h
           $noms = @($r.assets | ForEach-Object { $_.name })
           Write-Host ("publication : " + $r.tag_name + "  brouillon=" + $r.draft + "  prerelease=" + $r.prerelease)
