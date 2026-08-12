@@ -452,8 +452,13 @@ body.native .g-delta{font-size:11px;margin-top:6px}
 body.native #ico{opacity:.42;top:30%}
 body.native .seg-card{width:100%}
 /* Le sol animé devient le fond de la zone principale, sous le contenu */
+/* Largeur exprimée en vw : avec left+right et width:auto, la largeur calculée
+   ressortait à 0 — le bloc conteneur d'un élément fixed n'est pas toujours le
+   viewport. Une unité liée à la fenêtre contourne le problème. 252px = la
+   barre latérale, 56px = la barre d'état. */
 body.native #floor{
-  position:fixed;left:252px;right:0;bottom:56px;top:auto;height:34vh;width:auto;
+  position:fixed;left:252px;top:auto;bottom:56px;right:auto;
+  width:calc(100vw - 252px);height:34vh;
   z-index:0;opacity:.75;
 }
 .dash-intro h2{font-size:34px;font-weight:700;letter-spacing:-.02em;margin:14px 0 10px}
@@ -627,10 +632,17 @@ footer p{font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.1em;text-
   .dock .sp{flex-basis:0}
   section{scroll-margin-top:90px}
 }
+/* Respect de la préférence système — mais SEULEMENT sur le web.
+   Dans l'application de bureau (body.native), on l'ignore volontairement :
+   le réglage « Effets visuels réduits » de l'outil lui-même met Windows en
+   mode animations coupées, ce qui éteignait l'icosaèdre, le sol animé et le
+   relief des cartes. L'outil s'enlaidissait à cause d'un réglage qu'il venait
+   de poser. Sur le web on n'a aucune raison de supposer ça : la préférence
+   vient du visiteur, et elle répond à de vrais troubles vestibulaires. */
 @media (prefers-reduced-motion:reduce){
-  *{animation:none!important;transition:none!important}
+  body:not(.native) *{animation:none!important;transition:none!important}
+  body:not(.native) .rv{opacity:1;transform:none}
   html{scroll-behavior:auto}
-  .rv{opacity:1;transform:none}
 }
 </style>
 </head>
@@ -763,7 +775,7 @@ footer p{font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.1em;text-
       </ul>
       <a class="btn btn-g" href="https://github.com/tlonchambon95-cpu/radical-performance-downloads/releases/latest/download/RadicalPerformance-Setup.exe">Télécharger — 95 Mo</a>
       <span class="dl-note">
-        Windows 10/11 64 bits · version 2.3.0<br>
+        Windows 10/11 64 bits · version 2.4.0<br>
         <b>Application non signée</b> — Windows affichera « Windows a protégé votre PC » :
         cliquer sur « Informations complémentaires » puis « Exécuter quand même ».
       </span>
@@ -1708,7 +1720,15 @@ renderModule();
 <script>
 /* ================= COUCHE 3D & LÉGAL ================= */
 (() => {
-const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
+/* window.RP est exposé par le preload avant tout script de page : on sait donc
+   dès ici si on tourne dans l'application. La classe est posée tout de suite
+   pour que la règle CSS ci-dessus s'applique sans attendre le bloc 6. */
+const NATIF = !!window.RP;
+if (NATIF) document.body.classList.add('native');
+
+/* En natif, la préférence système est ignorée pour la décoration de
+   l'interface — voir le commentaire de la règle @media correspondante. */
+const REDUCED = !NATIF && matchMedia('(prefers-reduced-motion: reduce)').matches;
 const VOLT = [255,59,69], CYAN = [212,12,34];
 
 /* ---------- Tilt 3D + reflet ---------- */
@@ -2024,11 +2044,15 @@ Object.defineProperty(window, '__heroLive', {
   set: () => {},           // écritures du bloc 4 ignorées
   configurable: true
 });
+/* L'observateur seul ne suffit pas : après un déplacement du nœud dans le DOM
+   il ne se réveille pas de façon fiable, et les canvas restaient figés. La vue
+   affichée est la source de vérité — setView() pilote heroLive directement.
+   L'observateur ne sert plus qu'à mettre en pause quand on fait défiler le
+   tableau de bord au-delà de la jauge. */
 if ('IntersectionObserver' in window){
-  new IntersectionObserver(es => es.forEach(e => { heroLive = e.isIntersecting; }))
-    .observe(gaugeWrap);
-} else {
-  heroLive = true;
+  new IntersectionObserver(es => es.forEach(e => {
+    if (currentView === 'dash') heroLive = e.isIntersecting;
+  })).observe(gaugeWrap);
 }
 
 /* Les deux canvas se dimensionnent via getBoundingClientRect() au chargement,
@@ -2077,6 +2101,10 @@ function setView(v){
     currentModule = v.slice(4);
     renderModule();
   }
+  /* Les canvas ne tournent que sur le tableau de bord — inutile de consommer
+     du GPU pendant qu'on parcourt les réglages. */
+  heroLive = dash;
+  if (dash) resizeCanvas();
   mainEl.scrollTop = 0;
 }
 
