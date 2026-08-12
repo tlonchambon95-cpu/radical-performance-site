@@ -839,7 +839,7 @@ footer p{font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.1em;text-
       </ul>
       <a class="btn btn-g" href="https://github.com/tlonchambon95-cpu/radical-performance-downloads/releases/latest/download/RadicalPerformance-Setup.exe">Télécharger — 95 Mo</a>
       <span class="dl-note">
-        Windows 10/11 64 bits · version 3.0.0<br>
+        Windows 10/11 64 bits · version 3.1.0<br>
         <b>Application non signée</b> — Windows affichera « Windows a protégé votre PC » :
         cliquer sur « Informations complémentaires » puis « Exécuter quand même ».
       </span>
@@ -2058,6 +2058,7 @@ shell.innerHTML = `
     <div class="side-sec">Système</div>
     <button class="side-item" data-view="proc"><span class="lbl">Processus</span><span class="cnt" id="cntProc"></span></button>
     <button class="side-item" data-view="bios"><span class="lbl">BIOS</span></button>
+    <button class="side-item" data-view="rapport"><span class="lbl">Avant / après</span><span class="cnt" id="cntRepere"></span></button>
     <button class="side-item" data-view="method"><span class="lbl">Méthode &amp; honnêteté</span></button>
   </aside>
   <main class="main" id="appMain">
@@ -2065,6 +2066,7 @@ shell.innerHTML = `
     <div class="view" id="viewModule"></div>
     <div class="view" id="viewProc"></div>
     <div class="view" id="viewBios"></div>
+    <div class="view" id="viewRapport"></div>
     <div class="view" id="viewMethod"></div>
   </main>`;
 document.body.appendChild(shell);
@@ -2167,7 +2169,7 @@ function buildSide(){
   });
 }
 
-const VUES_FIXES = { dash: 'viewDash', method: 'viewMethod', proc: 'viewProc', bios: 'viewBios' };
+const VUES_FIXES = { dash: 'viewDash', method: 'viewMethod', proc: 'viewProc', bios: 'viewBios', rapport: 'viewRapport' };
 
 function setView(v){
   currentView = v;
@@ -2182,6 +2184,7 @@ function setView(v){
   }
   if (v === 'proc') renderProcessus();
   if (v === 'bios') renderBios();
+  if (v === 'rapport') renderRapport();
   /* Les canvas ne tournent que sur le tableau de bord — inutile de consommer
      du GPU pendant qu'on parcourt les réglages. */
   heroLive = dash;
@@ -2957,6 +2960,153 @@ function renderBios(){
       bouton « annuler », seulement une remise à zéro complète.</p>`;
 }
 
+/* ================= AVANT / APRÈS =================
+   Deux relevés identiques, pris à deux moments, comparés ligne à ligne.
+
+   La distinction MESURÉ / CALCULÉ est portée par l'affichage lui-même, et
+   ce n'est pas cosmétique : le ping et le compte de processus sont relevés
+   sur la machine, le budget de latence est déduit des réglages vérifiés.
+   Présenter les deux comme équivalents transformerait le rapport en
+   argument commercial, ce que ce produit refuse d'être.
+
+   Le point de référence est conservé sur disque : une intervention se fait
+   souvent en deux fois, avec un redémarrage entre les deux. */
+let REPERE = null;
+let APRES  = null;
+
+function budgetDe(releve){
+  if (!releve || !releve.etat) return null;
+  const segs = {};
+  SEGMENTS.forEach(s => { segs[s.id] = s.base; });
+  if (releve.machine && releve.machine.hz) segs.display = +(1000 / releve.machine.hz + REPONSE_DALLE).toFixed(1);
+  if (releve.ping && releve.ping.rtt != null) segs.net = +(releve.ping.rtt + TICKRATE).toFixed(1);
+  const base = Object.values(segs).reduce((a, b) => a + b, 0);
+  allTweaks().forEach(t => {
+    if (releve.etat[t.id] === true && t.seg && t.ms){
+      const ref = SEGMENTS.find(s => s.id === t.seg);
+      segs[t.seg] = Math.max(segs[t.seg] - t.ms, (ref ? segs[t.seg] : 0) * 0.35);
+    }
+  });
+  return { total: +Object.values(segs).reduce((a, b) => a + b, 0).toFixed(1), base: +base.toFixed(1), segs };
+}
+
+function renderRapport(){
+  const v = document.getElementById('viewRapport');
+  const nb = r => r && r.etat ? Object.values(r.etat).filter(x => x === true).length : null;
+  const fmt = (x, u = '') => (x == null ? '—' : String(x).replace('.', ',') + u);
+
+  const ligneComp = (lbl, a, b, unite, mesure, mieuxSiBas = true) => {
+    let ecart = '';
+    if (a != null && b != null && a !== b){
+      const d = +(b - a).toFixed(1);
+      const bon = mieuxSiBas ? d < 0 : d > 0;
+      ecart = `<span style="color:${bon ? '#3FB950' : 'var(--tradeoff)'}">${d > 0 ? '+' : '−'}${String(Math.abs(d)).replace('.', ',')}${unite}</span>`;
+    } else if (a != null && b != null){ ecart = '<span style="color:var(--dim)">inchangé</span>'; }
+    return `<div class="ligne">
+      <div class="nom"><b>${lbl}</b><small>${mesure ? 'mesuré sur la machine' : 'calculé à partir des réglages vérifiés'}</small></div>
+      <div class="val">${fmt(a, unite)}<br><em>${fmt(b, unite)}</em></div>
+      <div class="val" style="min-width:96px">${ecart}</div>
+    </div>`;
+  };
+
+  if (!REPERE){
+    v.innerHTML = `
+      <div class="dash-intro" style="margin-bottom:22px">
+        <span class="chip"><span class="pulse"></span>Avant / après</span>
+        <h2>Mesurer ce que l'intervention a changé</h2>
+        <p>Prends un point de référence avant de toucher à quoi que ce soit. Après l'intervention,
+           un second relevé compare les deux — en distinguant ce qui est mesuré de ce qui est déduit.</p>
+      </div>
+      <div class="band">
+        <div class="txt">
+          <div class="kicker">Point de référence</div>
+          <h3>Aucun relevé enregistré</h3>
+          <p>Le relevé prend une dizaine de secondes : état des 24 sondes, ping avec sa gigue,
+             nombre de processus et d'entrées de démarrage. Il est conservé sur disque, donc il
+             survit à un redémarrage.</p>
+        </div>
+        <div class="acts"><button class="btn btn-g" id="btnRepere">Prendre le point de référence</button></div>
+      </div>`;
+    document.getElementById('btnRepere').onclick = async e => {
+      e.target.disabled = true; e.target.textContent = 'Relevé en cours…';
+      REPERE = await RP.repere('poser');
+      APRES = null;
+      majCompteurRepere();
+      renderRapport();
+    };
+    return;
+  }
+
+  const bAvant = budgetDe(REPERE), bApres = budgetDe(APRES);
+  const dt = new Date(REPERE.date);
+
+  v.innerHTML = `
+    <div class="dash-intro" style="margin-bottom:22px">
+      <span class="chip"><span class="pulse"></span>Avant / après</span>
+      <h2>Ce que l'intervention a changé</h2>
+      <p>Référence prise le ${dt.toLocaleDateString('fr-FR')} à ${dt.toLocaleTimeString('fr-FR')}.
+         ${APRES ? 'Second relevé effectué.' : 'Aucun second relevé pour l\'instant.'}</p>
+    </div>
+
+    <div class="band">
+      <div class="txt">
+        <div class="kicker">${APRES ? 'Comparaison' : 'En attente'}</div>
+        <h3>${APRES ? 'Deux relevés comparés' : 'Applique tes réglages, puis mesure'}</h3>
+        <p>${APRES ? 'La colonne de droite est le relevé le plus récent. Les écarts en vert sont des améliorations.'
+                   : 'Fais ton intervention — réglages, mode match, services — puis reviens ici mesurer le résultat.'}</p>
+      </div>
+      <div class="acts">
+        <button class="btn btn-g" id="btnApres">${APRES ? 'Remesurer' : 'Mesurer maintenant'}</button>
+        <button class="btn btn-ghost" id="btnResetRepere">Nouveau point de référence</button>
+      </div>
+    </div>
+
+    <div class="sous-titre">Mesuré sur la machine</div>
+    <div class="liste">
+      ${ligneComp('Ping — trajet aller-retour', REPERE.ping && REPERE.ping.rtt, APRES && APRES.ping && APRES.ping.rtt, ' ms', true)}
+      ${ligneComp('Gigue — variation entre paquets', REPERE.ping && REPERE.ping.gigue, APRES && APRES.ping && APRES.ping.gigue, ' ms', true)}
+      ${ligneComp('Perte de paquets', REPERE.ping && REPERE.ping.perte, APRES && APRES.ping && APRES.ping.perte, ' %', true)}
+      ${ligneComp('Processus en cours', REPERE.processus, APRES && APRES.processus, '', true)}
+      ${ligneComp('Programmes au démarrage', REPERE.demarrage, APRES && APRES.demarrage, '', true)}
+    </div>
+
+    <div class="sous-titre">Déduit des réglages vérifiés</div>
+    <div class="liste">
+      ${ligneComp('Réglages appliqués', nb(REPERE), nb(APRES), '', false, false)}
+      ${ligneComp('Budget de latence', bAvant && bAvant.total, bApres && bApres.total, ' ms', false)}
+    </div>
+
+    <p style="font-size:12.5px;color:var(--dim);margin-top:16px;line-height:1.6">
+      Le budget de latence n'est pas chronométré : il est déduit des réglages dont l'application a
+      vérifié la présence, avec l'écran et le réseau mesurés. Le ping, la gigue et les compteurs de
+      processus, eux, sont relevés directement. Cette distinction est faite exprès — annoncer un
+      gain de millisecondes comme s'il avait été chronométré serait invérifiable.</p>`;
+
+  document.getElementById('btnApres').onclick = async e => {
+    e.target.disabled = true; e.target.textContent = 'Relevé en cours…';
+    APRES = await RP.releve();
+    renderRapport();
+  };
+  document.getElementById('btnResetRepere').onclick = async () => {
+    const ok = await RP.confirm({
+      title: 'Nouveau point de référence',
+      message: 'Remplacer le relevé du ' + dt.toLocaleString('fr-FR') + ' ?',
+      detail: 'L\'ancien relevé sera perdu et la comparaison repartira de zéro.',
+      confirmLabel: 'Remplacer'
+    });
+    if (!ok) return;
+    await RP.repere('effacer');
+    REPERE = null; APRES = null;
+    majCompteurRepere();
+    renderRapport();
+  };
+}
+
+function majCompteurRepere(){
+  const c = document.getElementById('cntRepere');
+  if (c) c.textContent = REPERE ? '1' : '';
+}
+
 /* ================= LECTURE DE L'ÉTAT ================= */
 async function refresh(){
   /* Rien ici ne doit pouvoir laisser une fenêtre vide et muette : une lecture
@@ -3134,6 +3284,7 @@ document.addEventListener('keydown', e => {
 refresh();
 initUpdates();
 chargerInventaire();
+RP.repere('lire').then(r => { if (r && !r.__err){ REPERE = r; majCompteurRepere(); } });
 })();
 </script>
 </body>

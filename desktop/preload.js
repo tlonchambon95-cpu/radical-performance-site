@@ -36,6 +36,12 @@ contextBridge.exposeInMainWorld('RP', {
   /** Mesure réelle de la latence réseau : RTT, gigue, perte. Lecture seule. */
   ping: () => ipcRenderer.invoke('rp:ping'),
 
+  /** Relevé complet de la machine à l'instant t (état, ping, processus). */
+  releve: () => ipcRenderer.invoke('rp:releve'),
+
+  /** Point de référence conservé sur disque : 'poser' | 'lire' | 'effacer'. */
+  repere: (action = 'poser') => ipcRenderer.invoke('rp:repere', action),
+
   /** Catalogue des services allégeables et leur état réel. */
   services: () => ipcRenderer.invoke('rp:services'),
 

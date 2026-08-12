@@ -222,6 +222,47 @@ ipcMain.handle('rp:applyServices', async (e, { ids, restaurer }) => {
 const { readPing } = require('./network');
 ipcMain.handle('rp:ping', async () => { try { return await readPing(); } catch (e) { return { __err: e.message }; } });
 
+/* ---- Point de référence avant / après ----
+   Le relevé est conservé sur disque : une intervention se fait souvent en
+   plusieurs fois, avec un redémarrage au milieu. Un point gardé en mémoire
+   serait perdu au premier reboot, c'est-à-dire au pire moment. */
+const fichierRepere = () => path.join(app.getPath('userData'), 'repere.json');
+
+async function releve(){
+  const [st, mach, ping, proc] = await Promise.all([
+    readState().catch(() => null),
+    readMachine().catch(() => null),
+    readPing().catch(() => null),
+    readProcesses().catch(() => null)
+  ]);
+  return {
+    date     : new Date().toISOString(),
+    etat     : st ? st.state : null,
+    admin    : st ? st.admin : null,
+    machine  : mach,
+    ping     : ping,
+    processus: proc ? proc.total : null,
+    demarrage: proc ? proc.demarrage.filter(d => d.actif).length : null
+  };
+}
+
+ipcMain.handle('rp:releve', async () => { try { return await releve(); } catch (e) { return { __err: e.message }; } });
+
+ipcMain.handle('rp:repere', async (e, action) => {
+  try {
+    if (action === 'lire'){
+      try { return JSON.parse(fsp.readFileSync(fichierRepere(), 'utf8')); } catch { return null; }
+    }
+    if (action === 'effacer'){
+      try { fsp.unlinkSync(fichierRepere()); } catch {}
+      return null;
+    }
+    const r = await releve();
+    fsp.writeFileSync(fichierRepere(), JSON.stringify(r, null, 2), 'utf8');
+    return r;
+  } catch (err) { return { __err: err.message }; }
+});
+
 ipcMain.handle('rp:listApps',  async () => { try { return await listApps();  } catch (e) { return { __err: e.message }; } });
 ipcMain.handle('rp:closeApps', async () => { try { return await closeApps(); } catch (e) { return { __err: e.message }; } });
 
