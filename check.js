@@ -53,7 +53,8 @@ const dup = [...new Set(ids.filter((x, i) => ids.indexOf(x) !== i))];
 ok('ids uniques', dup.length === 0, dup.join(','));
 
 const asym = all.filter(t => (t.cmd && !t.rev) || (t.rev && !t.cmd));
-ok('cmd/rev symétriques', asym.length === 0, asym.map(t => t.id).join(','));
+ok('cmd/rev présents des deux côtés', asym.length === 0, asym.map(t => t.id).join(','));
+info('symétrie réelle', 'vérifiée séparément par « node audit.js » — la présence d\'un rev ne prouve pas qu\'il défait tout');
 
 const segIds = new Set(SEGMENTS.map(s => s.id));
 const badSeg = all.filter(t => t.seg && !segIds.has(t.seg));

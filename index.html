@@ -839,7 +839,7 @@ footer p{font-family:'JetBrains Mono';font-size:10.5px;letter-spacing:.1em;text-
       </ul>
       <a class="btn btn-g" href="https://github.com/tlonchambon95-cpu/radical-performance-downloads/releases/latest/download/RadicalPerformance-Setup.exe">Télécharger — 95 Mo</a>
       <span class="dl-note">
-        Windows 10/11 64 bits · version 3.2.1<br>
+        Windows 10/11 64 bits · version 3.3.0<br>
         <b>Application non signée</b> — Windows affichera « Windows a protégé votre PC » :
         cliquer sur « Informations complémentaires » puis « Exécuter quand même ».
       </span>
@@ -1048,7 +1048,9 @@ Set-ItemProperty "HKLM:\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Me
 New-Item "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\GameDVR" -Force | Out-Null
 Set-ItemProperty "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\GameDVR" -Name AllowGameDVR -Value 0 -Type DWord`,
     rev:`Set-ItemProperty "HKCU:\\System\\GameConfigStore" -Name GameDVR_Enabled -Value 1 -Type DWord
-Remove-Item "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\GameDVR" -Recurse -Force -ErrorAction SilentlyContinue`},
+# On retire la seule valeur posee, pas la cle entiere : elle peut contenir
+# d'autres strategies posees par l'entreprise ou par un autre outil.
+Remove-ItemProperty "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\GameDVR" -Name AllowGameDVR -ErrorAction SilentlyContinue`},
 
    {id:'gpu-mpo',v:'tradeoff',seg:'display',ms:1.0,t:"Multiplan Overlay (MPO)",
     d:"Désactive le MPO, responsable de scintillements et de micro-freezes documentés sur plusieurs générations de pilotes.",
@@ -1176,7 +1178,18 @@ if ($nic) {
 }`,
     rev:`$idx = (Get-NetRoute -DestinationPrefix "0.0.0.0/0" -ErrorAction SilentlyContinue | Sort-Object RouteMetric, ifMetric | Select-Object -First 1).InterfaceIndex
 $nic = if ($idx) { Get-NetAdapter -InterfaceIndex $idx -ErrorAction SilentlyContinue } else { $null }
-if ($nic) { Reset-NetAdapterAdvancedProperty -Name $nic.Name -DisplayName "*" -ErrorAction SilentlyContinue }`},
+if ($nic) {
+    # On ne repose que les cinq proprietes touchees, une par une, plutot que
+    # "-DisplayName *" qui remettait a zero TOUTES les proprietes avancees de
+    # la carte — y compris celles reglees par l'utilisateur ou son integrateur.
+    $props = "Interrupt Moderation","Energy-Efficient Ethernet","Green Ethernet","Flow Control","Ultra Low Power Mode"
+    foreach ($p in $props) {
+        Reset-NetAdapterAdvancedProperty -Name $nic.Name -DisplayName $p -ErrorAction SilentlyContinue
+    }
+    # Oublie jusqu'ici : la commande coupait la gestion d'alimentation de la
+    # carte, l'annulation ne la remettait jamais.
+    Enable-NetAdapterPowerManagement -Name $nic.Name -ErrorAction SilentlyContinue
+}`},
 
    {id:'net-tcp',v:'real',seg:'net',ms:0.8,t:"Remise à zéro de la pile TCP",
     d:"Remet l'auto-tuning en « normal » et réactive ECN/RSS. Corrige les dégâts des tutoriels YouTube.",
@@ -1185,11 +1198,18 @@ if ($nic) { Reset-NetAdapterAdvancedProperty -Name $nic.Name -DisplayName "*" -E
 netsh int tcp set global ecncapability=enabled
 netsh int tcp set global rss=enabled
 netsh int tcp set supplemental Internet congestionprovider=cubic`,
-    rev:`netsh int tcp reset`},
+    rev:`# « netsh int tcp reset » remettait TOUTE la pile a zero et exigeait un
+# redemarrage : il effacait aussi des reglages que l'utilisateur avait faits
+# lui-meme avant de connaitre cet outil. On repose les quatre valeurs par
+# defaut de Windows, et rien d'autre.
+netsh int tcp set global autotuninglevel=normal
+netsh int tcp set global ecncapability=disabled
+netsh int tcp set global rss=enabled
+netsh int tcp set supplemental Internet congestionprovider=cubic`},
 
    {id:'net-dns',v:'marginal',seg:'net',ms:0,t:"DNS Cloudflare 1.1.1.1",
     d:"Bascule la résolution de noms sur Cloudflare / Quad9.",
-    why:"Aucun effet sur ton ping en partie — le DNS ne sert qu'à trouver l'adresse d'un serveur, pas à lui parler. Gain réel sur les temps de connexion aux services et le matchmaking. Je le classe honnêtement en marginal.",
+    why:"Aucun effet sur ton ping en partie — le DNS ne sert qu'à trouver l'adresse d'un serveur, pas à lui parler. Gain réel sur les temps de connexion aux services et le matchmaking. Je le classe honnêtement en marginal. À savoir avant d'armer : l'annulation repasse en DNS automatique fourni par la box. Si tu avais saisi un DNS manuel, il faudra le ressaisir — l'outil ne l'enregistre pas avant de le remplacer.",
     cmd:`# Carte portant la route par defaut, sinon le DNS atterrit sur une carte
 # virtuelle (VMware/VirtualBox/VPN) ou il ne sert a rien.
 $idx = (Get-NetRoute -DestinationPrefix "0.0.0.0/0" -ErrorAction SilentlyContinue | Sort-Object RouteMetric, ifMetric | Select-Object -First 1).InterfaceIndex
@@ -1236,7 +1256,11 @@ Set-ItemProperty "HKCU:\\Control Panel\\Mouse" -Name MouseThreshold2  -Value "0"
 Set-ItemProperty "HKCU:\\Control Panel\\Mouse" -Name MouseSensitivity -Value "10"`,
     rev:`Set-ItemProperty "HKCU:\\Control Panel\\Mouse" -Name MouseSpeed      -Value "1"
 Set-ItemProperty "HKCU:\\Control Panel\\Mouse" -Name MouseThreshold1 -Value "6"
-Set-ItemProperty "HKCU:\\Control Panel\\Mouse" -Name MouseThreshold2 -Value "10"`},
+Set-ItemProperty "HKCU:\\Control Panel\\Mouse" -Name MouseThreshold2 -Value "10"
+# La commande force aussi la sensibilite au cran 6/11 (valeur 10, le 1:1).
+# Sans cette ligne, un utilisateur qui avait regle son pointeur autrement ne
+# le retrouvait jamais. 10 est aussi la valeur par defaut de Windows.
+Set-ItemProperty "HKCU:\\Control Panel\\Mouse" -Name MouseSensitivity -Value "10"`},
 
    {id:'win-notif',v:'real',seg:'pc',ms:0.8,t:"Notifications et Assistant de concentration",
     d:"Coupe toutes les notifications système, les conseils Windows et les popups de premier démarrage.",
@@ -1254,7 +1278,13 @@ $cdm = "HKCU:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\ContentDeliveryMana
     cmd:`Set-ItemProperty "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\VisualEffects" -Name VisualFXSetting -Value 2 -Type DWord
 Set-ItemProperty "HKCU:\\Control Panel\\Desktop" -Name UserPreferencesMask -Value ([byte[]](0x90,0x12,0x03,0x80,0x10,0x00,0x00,0x00)) -Type Binary
 Set-ItemProperty "HKCU:\\Control Panel\\Desktop" -Name FontSmoothing -Value "2"`,
-    rev:`Set-ItemProperty "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\VisualEffects" -Name VisualFXSetting -Value 0 -Type DWord`},
+    rev:`Set-ItemProperty "HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\VisualEffects" -Name VisualFXSetting -Value 0 -Type DWord
+# Le masque doit imperativement etre remis : son bit 1 commande les animations
+# de zone client. Laisse a 0, Windows continue de repondre "animations reduites"
+# a toutes les applications, longtemps apres l'annulation du reglage.
+# 9E 3E 03 80 12 00 00 00 est la valeur par defaut, relevee dans HKU\\.DEFAULT.
+Set-ItemProperty "HKCU:\\Control Panel\\Desktop" -Name UserPreferencesMask -Value ([byte[]](0x9E,0x3E,0x03,0x80,0x12,0x00,0x00,0x00)) -Type Binary
+Set-ItemProperty "HKCU:\\Control Panel\\Desktop" -Name FontSmoothing -Value "2"`},
 
    {id:'win-update',v:'real',seg:'pc',ms:0.5,manual:true,t:"Fenêtre de calme avant match",
     d:"Suspension de Windows Update, de l'antivirus tiers en analyse planifiée et des synchronisations cloud.",
@@ -1316,7 +1346,11 @@ powercfg /change disk-timeout-ac 0
 powercfg /change monitor-timeout-ac 0`,
     rev:`powercfg /change standby-timeout-ac 30
 powercfg /change disk-timeout-ac 20
-powercfg /change monitor-timeout-ac 10`},
+powercfg /change monitor-timeout-ac 10
+# Oublie jusqu'ici : la commande met l'hibernation a 0, l'annulation la
+# laissait a 0. La machine ne s'hibernait donc plus jamais, meme apres
+# restauration complete. 180 minutes est la valeur par defaut de Windows.
+powercfg /change hibernate-timeout-ac 180`},
 
    {id:'pwr-hw',v:'real',seg:'pc',ms:0,manual:true,t:"Contrôle électrique du poste",
     d:"Vérifications matérielles à faire une fois, avant la saison.",
