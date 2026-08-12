@@ -11,7 +11,7 @@
    En ouverture directe (file://) il ne s'enregistre pas : c'est normal,
    le site fonctionne quand même, simplement sans installation ni cache.
    ===================================================================== */
-const VERSION = 'rp-v2';
+const VERSION = 'rp-v3';
 const CACHE   = VERSION;
 
 /* Coquille de l'application. La racine './' suffit en production ;
@@ -20,7 +20,7 @@ const CACHE   = VERSION;
 const SHELL = [
   './',
   './index.html',
-  './manifest.webmanifest',
+  './manifest.json',
   './icon-192.png',
   './icon-512.png',
   './icon-maskable-512.png',
